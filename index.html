@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark h-full overflow-hidden">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <title>PythonCraft — Интерактивный тренажёр Python (Zero to Senior)</title>
+  
+  <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        screens: {
+          'xs': '420px',
+          'sm': '640px',
+          'md': '768px',
+          'lg': '1024px',
+          'xl': '1280px',
+          '2xl': '1536px'
+        },
+        extend: {
+          colors: {
+            canvas: '#0C0E12',
+            surface: {
+              DEFAULT: '#13161C',
+              subtle: '#181C24',
+              hover: '#202530',
+              active: '#272D3B'
+            },
+            border: {
+              DEFAULT: '#242935',
+              subtle: '#1D212B',
+              focus: '#3A4254'
+            },
+            theme: {
+              emerald: '#52B788',
+              emeraldHover: '#40986F',
+              emeraldMuted: 'rgba(82, 183, 136, 0.12)',
+              amber: '#E5A962',
+              amberHover: '#D3964B',
+              amberMuted: 'rgba(229, 169, 98, 0.12)',
+              violet: '#A78BFA',
+              violetMuted: 'rgba(167, 139, 250, 0.12)',
+              coral: '#E78274',
+              coralMuted: 'rgba(231, 130, 116, 0.12)',
+              text: '#E6EBF5',
+              muted: '#8B93A4',
+              faint: '#5C6474'
+            }
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons & Canvas Confetti -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sar: env(safe-area-inset-right, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+      --sal: env(safe-area-inset-left, 0px);
+    }
+
+    /* Prevent whole-page scrolling and support mobile dvh */
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      padding-top: var(--sat);
+      padding-bottom: var(--sab);
+      padding-left: var(--sal);
+      padding-right: var(--sar);
+    }
+
+    /* Touch button responsiveness */
+    button, a, select, textarea {
+      touch-action: manipulation;
+    }
+
+    /* Custom refined scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0E1014;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #242935;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #363C4C;
+    }
+
+    /* Code editor typography & tab sizing */
+    .editor-container {
+      position: relative;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+    .code-textarea {
+      tab-size: 4;
+      caret-color: #52B788;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+      line-height: inherit;
+    }
+
+    /* On iOS, textareas with font-size < 16px cause auto-zoom. Force 16px on mobile viewports */
+    @media (max-width: 768px) {
+      .code-textarea {
+        font-size: 16px !important;
+      }
+      .editor-container {
+        font-size: 16px !important;
+      }
+    }
+
+    /* Hide scrollbars for mobile horizontal bars */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Tactile button microinteractions */
+    .btn-tactile {
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: translateZ(0);
+    }
+    @media (hover: hover) {
+      .btn-tactile:hover {
+        transform: translateY(-1px) scale(1.015);
+      }
+    }
+    .btn-tactile:active {
+      transform: translateY(1px) scale(0.975);
+    }
+
+    /* Soft glows */
+    .glow-emerald {
+      box-shadow: 0 4px 18px -2px rgba(82, 183, 136, 0.25);
+    }
+    .glow-amber {
+      box-shadow: 0 4px 18px -2px rgba(229, 169, 98, 0.22);
+    }
+
+    /* Dropdown popover animations */
+    .dropdown-popover-enter {
+      animation: dropdown-popover-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .dropdown-popover-exit {
+      animation: dropdown-popover-out 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes dropdown-popover-in {
+      from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    @keyframes dropdown-popover-out {
+      from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+      }
+    }
+
+    /* Engine status pulse */
+    @keyframes subtle-engine-pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.15); }
+    }
+    .engine-pulse {
+      animation: subtle-engine-pulse 2.2s infinite ease-in-out;
+    }
+  </style>
+</head>
+
+<body class="bg-canvas text-theme-text font-sans antialiased h-screen h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col selection:bg-theme-emeraldMuted selection:text-theme-emerald">
+
+  <!-- TOP HEADER (Fixed shrink-0, never scrolls) -->
+  <header class="h-14 shrink-0 border-b border-border bg-surface/90 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center gap-2 sm:gap-3.5 min-w-0">
+      <!-- Logo -->
+      <div class="flex items-center gap-2 cursor-pointer btn-tactile shrink-0" onclick="exitSandboxMode(0)">
+        <div class="w-8 h-8 rounded-lg bg-surface-subtle border border-border flex items-center justify-center text-theme-emerald">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <path d="M12 2c-4.4 0-4 1.9-4 1.9v2h4v.7H6s-4-.4-4 4.3 3.5 4.1 3.5 4.1h2.1v-2.1c0-2.4 2-2.3 2-2.3h4c1.9 0 2-1.9 2-1.9V4s.5-2-3.6-2zm-2.4 1.9c.5 0 .9.4.9.9 0 .5-.4.9-.9.9s-.9-.4-.9-.9c0-.5.4-.9.9-.9zM12 22c4.4 0 4-1.9 4-1.9v-2h-4v-.7h6s4 .4 4-4.3-3.5-4.1-3.5-4.1h-2.1v2.1c0 2.4-2 2.3-2 2.3h-4c-1.9 0-2 1.9-2 1.9v4.7s-.5 2 3.6 2zm2.4-1.9c-.5 0-.9-.4-.9-.9 0-.5.4-.9.9-.9.5 0 .9.4.9.9s-.4.9-.9.9z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
+            PythonCraft
+            <span class="hidden sm:inline-block text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/25 font-semibold">Zero → Senior</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Quick Nav Breadcrumb (Desktop) -->
+      <div id="headerBreadcrumb" class="hidden md:flex items-center gap-2 pl-3 border-l border-border/80 text-xs text-theme-muted truncate">
+        <span id="navModuleTitle" class="truncate max-w-[180px]">Уровень 0</span>
+        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-theme-faint shrink-0"></i>
+        <span id="navLessonTitle" class="text-theme-text font-medium truncate max-w-[200px]">Тема</span>
+      </div>
+    </div>
+
+    <!-- Right Controls: Engine Status, XP, Sandbox, Reset -->
+    <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+      <!-- Engine Status Badge -->
+      <div id="engineStatus" class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-subtle border border-border text-xs text-theme-muted">
+        <span class="w-2 h-2 rounded-full bg-theme-amber engine-pulse" id="engineDot"></span>
+        <span id="engineText" class="font-mono text-[11px]">Запуск...</span>
+      </div>
+
+      <!-- XP & Progress -->
+      <div class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg bg-surface-subtle border border-border text-xs">
+        <div class="flex items-center gap-1 text-theme-amber font-mono font-semibold">
+          <i data-lucide="award" class="w-3.5 h-3.5 fill-current"></i>
+          <span id="userXp">0</span> XP
+        </div>
+        <div class="hidden sm:block w-px h-3 bg-border"></div>
+        <div class="hidden sm:flex items-center gap-1.5 text-theme-muted">
+          <span>Освоено:</span>
+          <span id="progressPercent" class="font-mono text-theme-emerald font-semibold">0%</span>
+        </div>
+      </div>
+
+      <!-- Sandbox Button -->
+      <button onclick="toggleSandboxMode()" id="sandboxBtn" class="btn-tactile flex items-center gap-1.5 text-xs px-2.5 sm:px-3.5 py-1.5 rounded-lg border border-border bg-surface-subtle hover:bg-surface-hover hover:border-theme-emerald/30 text-theme-text font-medium transition-all">
+        <i data-lucide="terminal" class="w-3.5 h-3.5 text-theme-emerald"></i>
+        <span id="sandboxBtnText" class="hidden xs:inline">Песочница</span>
+      </button>
+
+      <!-- Reset Progress -->
+      <button onclick="resetAllProgress()" title="Сбросить прогресс" class="btn-tactile p-1.5 rounded-lg text-theme-muted hover:text-theme-coral hover:bg-surface-hover transition-colors">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MOBILE NAVIGATION TABS (Strict 44px min touch height on mobile/tablet) -->
+  <div id="mobileTabBar" class="lg:hidden shrink-0 flex border-b border-border bg-surface text-xs font-medium z-30 shadow-sm">
+    <button onclick="switchMobileTab('lessons')" id="tabBtnLessons" class="flex-1 py-3 text-center text-theme-muted border-b-2 border-transparent transition-all flex items-center justify-center gap-1.5">
+      <span>📚</span>
+      <span>Программа</span>
+    </button>
+    <button onclick="switchMobileTab('theory')" id="tabBtnTheory" class="flex-1 py-3 text-center text-theme-emerald border-b-2 border-theme-emerald font-semibold transition-all flex items-center justify-center gap-1.5">
+      <span>📖</span>
+      <span>Теория & Задачи</span>
+    </button>
+    <button onclick="switchMobileTab('editor')" id="tabBtnEditor" class="flex-1 py-3 text-center text-theme-muted border-b-2 border-transparent transition-all flex items-center justify-center gap-1.5">
+      <span>💻</span>
+      <span>Код & Вывод</span>
+    </button>
+  </div>
+
+  <!-- MAIN WORKSPACE: STRICT INDEPENDENT COLUMNS WITH ADAPTIVE RESPONSIVENESS -->
+  <main class="flex-1 min-h-0 overflow-hidden flex relative">
+
+    <!-- 1. LEFT SIDEBAR: INDEPENDENT SCROLLING CURRICULUM -->
+    <aside id="lessonsSidebar" class="w-full lg:w-80 xl:w-88 h-full flex flex-col shrink-0 border-r border-border bg-surface overflow-hidden z-20">
+      
+      <!-- Curriculum Header with Stylized Custom Dropdown (Fixed shrink-0) -->
+      <div class="p-3.5 border-b border-border bg-surface-subtle/40 shrink-0">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-xs font-bold uppercase tracking-wider text-theme-muted flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-3.5 h-3.5 text-theme-emerald"></i>
+            План обучения (Уровни 0–9)
+          </span>
+          <span id="lessonsCountBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-surface border border-border text-theme-emerald font-semibold">0/43</span>
+        </div>
+
+        <!-- STYLIZED ANIMATED LEVEL DROPDOWN -->
+        <div class="relative w-full" id="customLevelDropdown">
+          <button type="button" onclick="toggleLevelDropdown(event)" id="levelDropdownBtn" class="btn-tactile w-full px-3 py-2.5 rounded-xl bg-surface border border-border hover:border-theme-emerald/40 hover:bg-surface-hover text-left flex items-center justify-between text-xs text-theme-text transition-all group shadow-sm">
+            <div class="flex items-center gap-2.5 truncate">
+              <span id="levelDropdownBadge" class="w-6 h-5 rounded-md flex items-center justify-center font-mono text-[10px] bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/25 font-bold shrink-0">ALL</span>
+              <span id="levelDropdownText" class="truncate font-semibold text-white">Все уровни (0 — 9)</span>
+            </div>
+            <i data-lucide="chevron-down" id="levelDropdownChevron" class="w-3.5 h-3.5 text-theme-muted transition-transform duration-200 group-hover:text-theme-emerald shrink-0"></i>
+          </button>
+
+          <!-- Dropdown Popover with Spring Entrance & Backdrop Blur -->
+          <div id="levelDropdownMenu" class="hidden absolute top-full left-0 right-0 mt-1.5 p-1.5 rounded-2xl bg-[#14171F]/98 backdrop-blur-2xl border border-border/90 shadow-2xl z-50 origin-top overflow-hidden max-h-[340px] overflow-y-auto space-y-1">
+            <!-- Dynamically populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modules Tree Scrollable (Independent vertical scroll) -->
+      <div id="modulesContainer" class="flex-1 min-h-0 overflow-y-auto p-2.5 space-y-2.5">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Sidebar Footer (Fixed shrink-0) -->
+      <div class="p-3 border-t border-border bg-surface-subtle/50 text-[11px] text-theme-muted flex items-center justify-between shrink-0">
+        <span class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-theme-emerald"></span>
+          WASM CPython 3.12
+        </span>
+        <span class="font-mono text-theme-amber text-[10px]">Zero to Senior</span>
+      </div>
+    </aside>
+
+    <!-- 2. MIDDLE COLUMN: INDEPENDENT SCROLLING THEORY & TASKS SPEC -->
+    <section id="theoryPanel" class="w-full lg:w-[440px] xl:w-[490px] h-full flex flex-col shrink-0 border-r border-border bg-canvas overflow-hidden z-10">
+      
+      <!-- Lesson Card Header (Fixed shrink-0) -->
+      <div class="p-4 sm:p-5 border-b border-border bg-surface/30 shrink-0 backdrop-blur-sm">
+        <div class="flex items-center gap-2 mb-1.5">
+          <span id="lessonBadge" class="text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/25">Уровень</span>
+          <span id="lessonDifficulty" class="text-[10px] font-mono px-2 py-0.5 rounded bg-surface-subtle text-theme-muted border border-border">Core</span>
+        </div>
+        <h1 id="lessonTitle" class="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">Загрузка темы...</h1>
+      </div>
+
+      <!-- Theory Content & Stepper (Independent vertical scroll) -->
+      <div class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-5 text-sm text-theme-muted leading-relaxed">
+        <div id="theoryBody" class="prose prose-invert max-w-none space-y-4">
+          <!-- Rendered theory markdown/html -->
+        </div>
+
+        <!-- 1. CODING TASKS STEPPER (Shown when lesson.tasks.length > 0) -->
+        <div id="codingTasksSection" class="mt-6 p-4 rounded-xl bg-surface-subtle border border-border relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-theme-emerald"></div>
+          
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-theme-emerald flex items-center gap-1.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              Практические задания темы:
+            </span>
+            <span id="taskXpBadge" class="text-[11px] font-mono text-theme-amber font-semibold px-2 py-0.5 rounded bg-theme-amberMuted border border-theme-amber/20">+15 XP</span>
+          </div>
+
+          <!-- Task Selector Tabs (Pills) -->
+          <div id="tasksPillsContainer" class="flex items-center gap-1.5 mb-3.5 flex-wrap">
+            <!-- Dynamic task buttons -->
+          </div>
+
+          <!-- Current Task Content -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs font-semibold text-white">
+              <span id="currentTaskTitle">Задача 1</span>
+              <span id="currentTaskIndexLabel" class="text-[11px] text-theme-faint font-mono">1 из 1</span>
+            </div>
+            <p id="taskDescription" class="text-xs sm:text-sm text-theme-text font-medium leading-relaxed">
+              Описание задания...
+            </p>
+          </div>
+
+          <div class="mt-3.5 p-3 rounded-lg bg-canvas border border-border/80 font-mono text-xs">
+            <span class="text-theme-faint text-[10px] uppercase tracking-wider block mb-1">Ожидаемый вывод в терминале:</span>
+            <code id="expectedOutputDisplay" class="text-theme-emerald block whitespace-pre-wrap">--</code>
+          </div>
+        </div>
+
+        <!-- 2. THEORY-ONLY COMPLETION SECTION (Shown when lesson.tasks.length === 0) -->
+        <div id="theoryOnlySection" class="hidden mt-6 p-4 rounded-xl bg-surface-subtle border border-border relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-theme-amber"></div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-theme-amber flex items-center gap-1.5">
+              <i data-lucide="book-open" class="w-4 h-4"></i>
+              Теоретический раздел
+            </span>
+            <span class="text-[11px] font-mono text-theme-emerald font-semibold px-2 py-0.5 rounded bg-theme-emeraldMuted border border-theme-emerald/20">+10 XP</span>
+          </div>
+          <p class="text-xs text-theme-muted mb-3 leading-relaxed">
+            В этом разделе представлены концептуальные и архитектурные основы. Ознакомьтесь с материалом выше и нажмите кнопку ниже, чтобы зафиксировать прогресс.
+          </p>
+          <button onclick="markCurrentTheoryLessonRead()" id="markReadBtn" class="btn-tactile w-full py-2.5 px-4 rounded-lg bg-theme-emeraldMuted hover:bg-theme-emerald/20 border border-theme-emerald/30 text-theme-emerald font-semibold text-xs flex items-center justify-center gap-1.5 transition-all">
+            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+            <span id="markReadBtnText">Отметить как изученное (+10 XP)</span>
+          </button>
+        </div>
+
+        <!-- Action Helper Buttons -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2">
+          <button onclick="insertSolutionHint()" id="hintBtn" class="btn-tactile flex-1 flex items-center justify-center gap-1.5 text-xs py-2.5 px-3 rounded-lg bg-surface-subtle hover:bg-surface-hover border border-border text-theme-muted hover:text-theme-text transition-all">
+            <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-theme-amber"></i>
+            <span>Вставить подсказку</span>
+          </button>
+          <button onclick="advanceNextTaskOrLesson()" id="nextActionBtn" class="btn-tactile flex-1 flex items-center justify-center gap-1.5 text-xs py-2.5 px-3 rounded-lg bg-theme-emeraldMuted hover:bg-theme-emerald/20 border border-theme-emerald/30 text-theme-emerald font-semibold transition-all">
+            <span id="nextActionText">Следующая задача</span>
+            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Mobile Quick Switch to Editor CTA (Visible only on mobile/tablet) -->
+        <button onclick="switchMobileTab('editor')" class="lg:hidden btn-tactile w-full py-2.5 px-4 rounded-xl bg-surface-subtle hover:bg-surface-hover border border-border text-theme-emerald font-semibold text-xs flex items-center justify-center gap-2 pb-6">
+          <span>Перейти к коду и запуску</span>
+          <i data-lucide="code-2" class="w-4 h-4 text-theme-emerald"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. RIGHT COLUMN: 6/4 PROPORTIONAL WORKSTATION -->
+    <section id="editorPanel" class="w-full lg:flex-1 h-full min-w-0 flex flex-col bg-canvas overflow-hidden transition-all duration-300">
+      
+      <!-- SANDBOX TOP BAR (Visible only in sandbox mode) -->
+      <div id="sandboxCustomBar" class="hidden px-3 sm:px-5 py-2.5 sm:py-3 border-b border-border bg-surface-subtle/80 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <button onclick="exitSandboxMode()" class="btn-tactile flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-hover border border-border text-xs text-theme-text font-medium">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-theme-emerald"></i>
+            <span>Назад к урокам</span>
+          </button>
+          <div class="hidden sm:block h-4 w-px bg-border"></div>
+          <span class="hidden sm:flex text-xs font-semibold text-white items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-theme-amber"></i>
+            Свободная песочница Python 3.12
+          </span>
+        </div>
+
+        <!-- Preset Snippets Quick Picker with horizontal scroll on small screens -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full py-0.5">
+          <span class="text-[11px] text-theme-muted mr-1 shrink-0">Шаблоны:</span>
+          <button onclick="loadSandboxPreset('asyncio')" class="btn-tactile text-[11px] px-2.5 py-1 rounded-md bg-surface border border-border hover:border-theme-emerald/40 text-theme-muted hover:text-white transition-all shrink-0">
+            ⚡ Asyncio
+          </button>
+          <button onclick="loadSandboxPreset('dataclass')" class="btn-tactile text-[11px] px-2.5 py-1 rounded-md bg-surface border border-border hover:border-theme-emerald/40 text-theme-muted hover:text-white transition-all shrink-0">
+            🏛️ Датаклассы
+          </button>
+          <button onclick="loadSandboxPreset('algorithms')" class="btn-tactile text-[11px] px-2.5 py-1 rounded-md bg-surface border border-border hover:border-theme-emerald/40 text-theme-muted hover:text-white transition-all shrink-0">
+            🔀 Алгоритмы
+          </button>
+          <button onclick="loadSandboxPreset('regex')" class="btn-tactile text-[11px] px-2.5 py-1 rounded-md bg-surface border border-border hover:border-theme-emerald/40 text-theme-muted hover:text-white transition-all shrink-0">
+            🔍 Regex
+          </button>
+          <button onclick="loadSandboxPreset('benchmark')" class="btn-tactile text-[11px] px-2.5 py-1 rounded-md bg-surface border border-border hover:border-theme-emerald/40 text-theme-muted hover:text-white transition-all shrink-0">
+            ⏱️ Тайминги
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor Standard Toolbar (Fixed shrink-0) -->
+      <div class="h-11 px-3 sm:px-4 border-b border-border bg-surface/70 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2 sm:gap-3">
+          <!-- Active Tab -->
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-canvas border border-border text-xs text-theme-text font-mono">
+            <i data-lucide="file-code" class="w-3.5 h-3.5 text-theme-emerald"></i>
+            <span id="editorFileName">main.py</span>
+          </div>
+          <span class="text-xs text-theme-faint hidden md:inline font-mono">Ctrl + Enter для запуска</span>
+          <!-- Mobile Return to Theory button -->
+          <button onclick="switchMobileTab('theory')" class="lg:hidden btn-tactile text-[11px] text-theme-muted hover:text-theme-emerald flex items-center gap-1 px-2 py-1 rounded bg-surface/50 border border-border/70">
+            <i data-lucide="book-open" class="w-3 h-3 text-theme-emerald"></i>
+            <span>Теория</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <!-- Reset Code -->
+          <button onclick="resetEditorCode()" title="Сбросить к исходному шаблону" class="btn-tactile p-1.5 rounded-lg text-theme-muted hover:text-theme-text hover:bg-surface-hover transition-colors">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <!-- Copy Code -->
+          <button onclick="copyEditorCode()" title="Скопировать код" class="btn-tactile p-1.5 rounded-lg text-theme-muted hover:text-theme-text hover:bg-surface-hover transition-colors">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <!-- Run Code Button (Tactile Emerald Glow) -->
+          <button onclick="runPythonCode()" id="runBtn" class="btn-tactile glow-emerald flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-lg bg-theme-emerald hover:bg-theme-emeraldHover text-canvas font-bold text-xs transition-all active:scale-95">
+            <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+            <span>Запуск</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MOBILE QUICK CODING HELPER BAR (For smartphones/tablets without special keys) -->
+      <div id="mobileCodeHelperBar" class="lg:hidden shrink-0 flex items-center gap-1 px-2.5 py-1.5 bg-surface-subtle/95 border-b border-border/80 overflow-x-auto no-scrollbar text-xs font-mono">
+        <span class="text-[10px] text-theme-faint uppercase font-sans font-semibold shrink-0 mr-0.5">Ввод:</span>
+        <button type="button" onclick="insertCodeSnippet('    ')" class="px-2 py-1 rounded bg-surface border border-border text-theme-emerald hover:text-white shrink-0 active:scale-95 font-semibold">⇥ Tab</button>
+        <button type="button" onclick="insertCodeSnippet(':')" class="px-2 py-1 rounded bg-surface border border-border text-theme-amber hover:text-white shrink-0 active:scale-95 font-bold">:</button>
+        <button type="button" onclick="insertCodeSnippet('()', 1)" class="px-2 py-1 rounded bg-surface border border-border text-theme-text hover:text-white shrink-0 active:scale-95 font-bold">( )</button>
+        <button type="button" onclick="insertCodeSnippet('\"\"', 1)" class="px-2 py-1 rounded bg-surface border border-border text-theme-text hover:text-white shrink-0 active:scale-95 font-bold">" "</button>
+        <button type="button" onclick="insertCodeSnippet(' = ')" class="px-2 py-1 rounded bg-surface border border-border text-theme-text hover:text-white shrink-0 active:scale-95 font-bold">=</button>
+        <button type="button" onclick="insertCodeSnippet('[]', 1)" class="px-2 py-1 rounded bg-surface border border-border text-theme-text hover:text-white shrink-0 active:scale-95 font-bold">[ ]</button>
+        <button type="button" onclick="insertCodeSnippet('{}', 1)" class="px-2 py-1 rounded bg-surface border border-border text-theme-text hover:text-white shrink-0 active:scale-95 font-bold">{ }</button>
+        <button type="button" onclick="insertCodeSnippet('def ')" class="px-2 py-1 rounded bg-surface border border-border text-theme-violet hover:text-white shrink-0 active:scale-95">def</button>
+        <button type="button" onclick="insertCodeSnippet('print()', 6)" class="px-2 py-1 rounded bg-surface border border-border text-theme-emerald hover:text-white shrink-0 active:scale-95">print()</button>
+        <button type="button" onclick="insertCodeSnippet('return ')" class="px-2 py-1 rounded bg-surface border border-border text-theme-coral hover:text-white shrink-0 active:scale-95">return</button>
+      </div>
+
+      <!-- CODE EDITOR CONTAINER: 60% HEIGHT PROPORTION (flex-[6] min-h-0) -->
+      <div id="editorWorkspaceContainer" class="flex-[6] min-h-0 flex bg-canvas relative overflow-hidden editor-container">
+        <!-- Line Numbers Column -->
+        <div id="lineNumbers" class="w-9 sm:w-12 py-3.5 pr-2 sm:pr-2.5 text-right font-mono text-[11px] sm:text-xs text-theme-faint select-none bg-surface/15 border-r border-border/40 overflow-hidden shrink-0">
+          1
+        </div>
+        <!-- Code Textarea (With autocapitalize="off" autocorrect="off" for mobile phones) -->
+        <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" class="flex-1 h-full py-3.5 px-3 sm:px-4 bg-transparent code-textarea text-theme-text border-none focus:ring-0 leading-relaxed overflow-y-auto" placeholder="# Напишите ваш Python код здесь..."></textarea>
+      </div>
+
+      <!-- OUTPUT TERMINAL WINDOW: 40% HEIGHT PROPORTION (flex-[4] min-h-0) -->
+      <div id="terminalContainer" class="flex-[4] min-h-0 border-t border-border bg-[#0B0D11] flex flex-col overflow-hidden transition-all duration-200">
+        <!-- Terminal Header (shrink-0) -->
+        <div class="h-9 px-3 sm:px-4 border-b border-border/80 bg-surface/40 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2 min-w-0">
+            <i data-lucide="terminal-square" class="w-4 h-4 text-theme-muted shrink-0"></i>
+            <span class="text-xs font-mono font-medium text-theme-muted truncate">Терминал вывода</span>
+            <span id="runTimeBadge" class="hidden text-[10px] font-mono px-2 py-0.5 rounded bg-surface border border-border text-theme-emerald font-semibold shrink-0">0ms</span>
+          </div>
+
+          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <!-- Validation Badge -->
+            <div id="taskStatusBadge" class="hidden text-[11px] font-medium items-center gap-1 px-2.5 py-0.5 rounded-full truncate max-w-[150px] sm:max-w-none">
+              <!-- Result pill -->
+            </div>
+            <!-- Proportions Switcher (Toggle Compact / Standard 6:4) -->
+            <button onclick="toggleTerminalCompact()" id="terminalToggleBtn" title="Переключить высоту терминала" class="btn-tactile text-[11px] text-theme-muted hover:text-white px-2 py-0.5 rounded bg-surface/50 border border-border/60 hover:bg-surface-hover transition-colors font-mono">
+              ↕ 6:4
+            </button>
+            <!-- Clear Terminal -->
+            <button onclick="clearTerminal()" title="Очистить консоль" class="btn-tactile text-[11px] text-theme-muted hover:text-white px-2 py-0.5 rounded bg-surface/50 border border-border/60 hover:bg-surface-hover transition-colors font-mono">
+              Очистить
+            </button>
+          </div>
+        </div>
+
+        <!-- Terminal Output Area (Independent scroll) -->
+        <div id="terminalOutput" class="flex-1 min-h-0 p-3 sm:p-4 font-mono text-xs overflow-y-auto space-y-1 select-text">
+          <div class="text-theme-faint">
+            PythonCraft готов. Нажмите «Запуск» или Ctrl+Enter для исполнения кода.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- CURRICULUM DATASET & JAVASCRIPT CONTROLLERS -->
+  <script>
+    // INJECTED CURRICULUM DATASET FROM python_learning_plan.txt
+    const PLAN_DATABASE = [
+  {
+    "id": "lvl0-01",
+    "level": "0",
+    "module": "Уровень 0. Инструменты и Окружение",
+    "title": "0.1. Установка, CPython и флаги запуска",
+    "badge": "0.1 Tools",
+    "difficulty": "Intro",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>CPython</strong> — это официальная эталонная реализация языка Python, написанная на языке C. Когда вы запускаете код, он сначала компилируется во внутренний <em>байт-код</em> (файлы <code>.pyc</code>), а затем исполняется виртуальной стек-машиной.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    Исходный код (.py) ➔ Байт-код (.pyc) ➔ CPython VM ➔ Исполнение на CPU\n                </div>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Ключевые флаги командной строки:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code class=\"text-theme-emerald\">python -c \"код\"</code> — мгновенно выполняет переданную строку кода без создания файла.</li>\n                    <li><code class=\"text-theme-emerald\">python -m модуль</code> — находит модуль в путях поиска <code>sys.path</code> и запускает его как главный скрипт (например: <code>python -m venv .venv</code>, <code>python -m http.server</code>).</li>\n                    <li><code class=\"text-theme-emerald\">python -i script.py</code> — выполняет скрипт и не закрывается, а переходит в интерактивный режим (REPL), сохраняя все созданные переменные в памяти.</li>\n                </ul>\n                <div class=\"p-2.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-200 text-xs\">\n                    <strong>Частая ошибка:</strong> Запуск <code>pip install</code> внутри интерпретатора Python, а не в терминале операционной системы. Помните: интерпретатор выполняет только код Python!\n                </div>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl0-01-t1",
+        "title": "Мажорная версия интерпретатора",
+        "desc": "Импортируйте встроенный системный модуль <code>sys</code> и выведите мажорную (главную) версию Python через свойство <code>sys.version_info.major</code>. Вывод должен содержать только число (например, 3).",
+        "starter": "import sys\n\n# Напишите команду print для вывода мажорной версии:\n",
+        "expected": "3",
+        "hint": "import sys\nprint(sys.version_info.major)",
+        "xp": 10
+      },
+      {
+        "id": "lvl0-01-t2",
+        "title": "Проверка платформы и битности",
+        "desc": "В Python целое число <code>sys.maxsize</code> указывает на максимальный размер адресации памяти. Если <code>sys.maxsize > 2**32</code>, интерпретатор работает в 64-битном режиме. Выведите результат этой логической проверки.",
+        "starter": "import sys\n\n# Проверьте утверждение sys.maxsize > 2**32 и выведите результат:\n",
+        "expected": "True",
+        "hint": "import sys\nprint(sys.maxsize > 2**32)",
+        "xp": 10
+      },
+      {
+        "id": "lvl0-01-t3",
+        "title": "Флаги платформы",
+        "desc": "Свойство <code>sys.platform</code> возвращает идентификатор операционной системы (например, 'win32', 'linux', 'darwin' или 'emscripten' в браузере). Проверьте тип этого свойства с помощью <code>type(sys.platform).__name__</code> и выведите его через <code>print()</code>.",
+        "starter": "import sys\n\n# Выведите имя типа sys.platform:\n",
+        "expected": "str",
+        "hint": "import sys\nprint(type(sys.platform).__name__)",
+        "xp": 15
+      }
+    ]
+  },
+  {
+    "id": "lvl0-02",
+    "level": "0",
+    "module": "Уровень 0. Инструменты и Окружение",
+    "title": "0.2. Редактор кода (IDE), отладка и Ruff",
+    "badge": "0.2 IDE",
+    "difficulty": "Intro",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Профессиональная разработка опирается на две основные среды: <strong>VS Code</strong> (с расширениями Pylance, Ruff) и <strong>PyCharm</strong>.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Три столпа качества кода:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><strong>Линтер (Linter):</strong> анализирует код на логические ошибки, неиспользуемые переменные, синтаксический мусор без запуска кода.</li>\n                    <li><strong>Форматтер (Formatter):</strong> приводит отступы, кавычки и переносы строк к единому стандарту (PEP 8). Стандарт де-факто сегодня — <strong>Ruff</strong> (написан на Rust, в 50-100 раз быстрее Black и Flake8).</li>\n                    <li><strong>Отладчик (Debugger):</strong> позволяет выполнять код построчно, ставить точки останова (Breakpoints) и смотреть значения переменных на каждом шаге.</li>\n                </ul>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    F9: Поставить Breakpoint | F10: Шаг без захода (Step Over) | F11: Зайти внутрь функции (Step Into)\n                </div>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl0-03",
+    "level": "0",
+    "module": "Уровень 0. Инструменты и Окружение",
+    "title": "0.3. Виртуальные окружения (venv, uv) и зависимости",
+    "badge": "0.3 venv",
+    "difficulty": "Intro",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>Виртуальное окружение</strong> — это изолированная папка на диске, в которую устанавливаются библиотеки конкретно для текущего проекта. Без него библиотеки ставятся глобально в систему, что неизбежно приводит к конфликтам версий.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Базовый цикл работы с venv:</h4>\n                <ol class=\"list-decimal pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Создание: <code>python -m venv .venv</code></li>\n                    <li>Активация (Windows PowerShell): <code>.venv\\Scripts\\Activate.ps1</code></li>\n                    <li>Активация (Linux / macOS): <code>source .venv/bin/activate</code></li>\n                    <li>Фиксация версий: <code>pip freeze > requirements.txt</code></li>\n                    <li>Установка из файла: <code>pip install -r requirements.txt</code></li>\n                </ol>\n                <p class=\"text-xs text-theme-muted\">Современная замена стандартному pip — <strong>uv</strong> от компании Astral. Он выполняет те же операции в 10–100 раз быстрее и автоматически управляет версиями самого Python.</p>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl0-03-t1",
+        "title": "Имитация парсинга requirements",
+        "desc": "В файле зависимостей библиотеки записаны в виде строк: <code>'fastapi==0.110.0'</code>. Напишите код, который берет строку <code>dep = 'fastapi==0.110.0'</code>, разделяет её по разделителю <code>==</code> и выводит только чистое имя пакета.",
+        "starter": "dep = 'fastapi==0.110.0'\n\n# Выведите только имя пакета (fastapi):\n",
+        "expected": "fastapi",
+        "hint": "dep = 'fastapi==0.110.0'\npackage_name = dep.split('==')[0]\nprint(package_name)",
+        "xp": 15
+      }
+    ]
+  },
+  {
+    "id": "lvl1-01",
+    "level": "1",
+    "module": "Уровень 1. Базовый Синтаксис и Типы",
+    "title": "1.1. Модель данных: Ссылки, id() и оператор is vs ==",
+    "badge": "1.1 Model",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>В Python <strong>всё является объектом</strong>. Переменные в Python — это не ячейки памяти, а <em>именованные ссылки (ярлыки)</em>, указывающие на объекты в оперативной памяти.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    a = [1, 2, 3]  ───┐\n                                ├──➔ Объект в куче: [1, 2, 3] (id: 0x7f9a...)\n                    b = a          ───┘\n                </div>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Фундаментальная разница: is vs ==</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code class=\"text-theme-emerald\">==</code> — проверяет <strong>равенство значений</strong> (эквивалентность данных). Вызывает метод <code>__eq__()</code>.</li>\n                    <li><code class=\"text-theme-emerald\">is</code> — проверяет <strong>идентичность объектов</strong> (указывают ли две переменные на одну и ту же область памяти). Сравнивает адреса <code>id(a) == id(b)</code>.</li>\n                </ul>\n                <div class=\"p-2.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-200 text-xs\">\n                    <strong>Золотое правило:</strong> Проверка на <code>None</code> всегда делается через <code>is</code>: <code>if value is None:</code> (так как объект <code>None</code> существует в памяти строго в единственном экземпляре — паттерн Singleton).\n                </div>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl1-01-t1",
+        "title": "Идентичность списков",
+        "desc": "Созданы два списка с одинаковым содержимым: <code>list_a = [1, 2, 3]</code> и <code>list_b = [1, 2, 3]</code>. Выведите результат проверки их равенства по значению (<code>==</code>), а на следующей строке — результат проверки их идентичности (<code>is</code>).",
+        "starter": "list_a = [1, 2, 3]\nlist_b = [1, 2, 3]\n\n# 1. Выведите list_a == list_b\n# 2. Выведите list_a is list_b\n",
+        "expected": "True\nFalse",
+        "hint": "list_a = [1, 2, 3]\nlist_b = [1, 2, 3]\nprint(list_a == list_b)\nprint(list_a is list_b)",
+        "xp": 15
+      },
+      {
+        "id": "lvl1-01-t2",
+        "title": "Связывание ссылок",
+        "desc": "Создайте список <code>x = [10, 20]</code>, присвойте <code>y = x</code>. Затем добавьте число <code>30</code> в список <code>y</code> с помощью метода <code>y.append(30)</code>. Выведите список <code>x</code>. Обратите внимание, как изменился исходный объект по ссылке!",
+        "starter": "# Создайте x, свяжите y = x, измените y и выведите x:\n",
+        "expected": "[10, 20, 30]",
+        "hint": "x = [10, 20]\ny = x\ny.append(30)\nprint(x)",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl1-02",
+    "level": "1",
+    "module": "Уровень 1. Базовый Синтаксис и Типы",
+    "title": "1.2. Числа (int, float), арифметика и точность",
+    "badge": "1.2 Numbers",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Python предоставляет встроенную поддержку целых чисел произвольной разрядности (<code>int</code>) и вещественных чисел двойной точности (<code>float</code>).</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Арифметические операторы:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>+</code>, <code>-</code>, <code>*</code> — сложение, вычитание, умножение.</li>\n                    <li><code>/</code> — <strong>вещественное деление</strong> (всегда возвращает <code>float</code>: <code>4 / 2 ➔ 2.0</code>).</li>\n                    <li><code>//</code> — <strong>целочисленное деление</strong> с округлением вниз к минус бесконечности (<code>7 // 2 ➔ 3</code>, но <code>-7 // 2 ➔ -4</code>!).</li>\n                    <li><code>%</code> — остаток от деления (<code>7 % 3 ➔ 1</code>).</li>\n                    <li><code>**</code> — возведение в степень (<code>2 ** 8 ➔ 256</code>).</li>\n                </ul>\n                <div class=\"p-2.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-200 text-xs\">\n                    <strong>Ловушка точности float (IEEE 754):</strong> В двоичной системе невозможно точно представить 0.1, поэтому <code>0.1 + 0.2 == 0.30000000000000004</code>. Для финансовых расчетов используют модуль <code>decimal.Decimal</code>!\n                </div>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl1-02-t1",
+        "title": "Деление и остаток",
+        "desc": "Дано количество секунд: <code>total_seconds = 3725</code>. Вычислите количество полных часов (в часе 3600 секунд) и оставшихся секунд. Выведите их через пробел.",
+        "starter": "total_seconds = 3725\n\n# Вычислите hours и remainder_seconds, затем выведите их:\n",
+        "expected": "1 125",
+        "hint": "total_seconds = 3725\nhours = total_seconds // 3600\nremainder = total_seconds % 3600\nprint(hours, remainder)",
+        "xp": 15
+      },
+      {
+        "id": "lvl1-02-t2",
+        "title": "Точное финансовое сложение",
+        "desc": "Импортируйте класс <code>Decimal</code> из модуля <code>decimal</code>. Сложите строки <code>Decimal('0.1')</code> и <code>Decimal('0.2')</code> и выведите результат. Убедитесь, что нет погрешности с хвостиком 0.00000000000000004.",
+        "starter": "from decimal import Decimal\n\n# Сложите Decimal('0.1') и Decimal('0.2') и выведите:\n",
+        "expected": "0.3",
+        "hint": "from decimal import Decimal\nprint(Decimal('0.1') + Decimal('0.2'))",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl1-03",
+    "level": "1",
+    "module": "Уровень 1. Базовый Синтаксис и Типы",
+    "title": "1.3. Логический тип (bool), сравнения и Falsy-значения",
+    "badge": "1.3 Bool",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Тип <code>bool</code> в Python является прямым подклассом <code>int</code>: значение <code>True</code> эквивалентно <code>1</code>, а <code>False</code> эквивалентно <code>0</code>.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Truthy и Falsy правила:</h4>\n                <p class=\"text-xs text-theme-muted\">При вычислении в логическом контексте (например, в условии <code>if</code>) следующие объекты всегда считаются <strong>ложными (Falsy)</strong>:</p>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Константы: <code>None</code>, <code>False</code></li>\n                    <li>Нули любого числового типа: <code>0</code>, <code>0.0</code>, <code>Decimal(0)</code></li>\n                    <li>Пустые коллекции и последовательности: <code>\"\"</code> (пустая строка), <code>[]</code>, <code>()</code>, <code>{}</code>, <code>set()</code></li>\n                </ul>\n                <p class=\"text-xs text-theme-muted\"><strong>Все остальные объекты считаются истинными (Truthy).</strong> Поэтому проверку на непустой список пишут просто: <code>if my_list:</code> вместо <code>if len(my_list) > 0:</code>.</p>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl1-03-t1",
+        "title": "Фильтрация Falsy-значений",
+        "desc": "Дан список различных значений: <code>raw_data = [0, 'hello', '', None, 42, [], True, False]</code>. Примените встроенную функцию <code>filter(bool, raw_data)</code>, преобразуйте результат обратно в список через <code>list(...)</code> и выведите его.",
+        "starter": "raw_data = [0, 'hello', '', None, 42, [], True, False]\n\n# Отфильтруйте только truthy значения и выведите список:\n",
+        "expected": "['hello', 42, True]",
+        "hint": "raw_data = [0, 'hello', '', None, 42, [], True, False]\nclean = list(filter(bool, raw_data))\nprint(clean)",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl1-04",
+    "level": "1",
+    "module": "Уровень 1. Базовый Синтаксис и Типы",
+    "title": "1.4. Строки (str): Индексация, срезы и методы",
+    "badge": "1.4 Strings",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Строка <code>str</code> — это <strong>неизменяемая (immutable)</strong> последовательность символов Юникода. Любая операция модификации возвращает новую строку, не меняя исходную.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Синтаксис срезов (Slices): <code>s[start:stop:step]</code></h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>start</code> — индекс начала (включительно, по умолчанию 0).</li>\n                    <li><code>stop</code> — индекс конца (<strong>не включая его</strong>).</li>\n                    <li><code>step</code> — шаг среза. Отрицательный шаг идет справа налево: <code>s[::-1]</code> разворачивает строку задом наперед.</li>\n                </ul>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Ключевые методы:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>.strip()</code> — удаляет пробелы и переводы строк по краям.</li>\n                    <li><code>.split(sep)</code> — делит строку на список подстрок.</li>\n                    <li><code>sep.join(list)</code> — склеивает список строк обратно через разделитель.</li>\n                    <li><code>.replace(old, new)</code> — заменяет вхождения подстроки.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl1-04-t1",
+        "title": "Палиндром через срез",
+        "desc": "Дано слово <code>word = 'радар'</code>. Сделайте проверку, читается ли оно одинаково слева направо и справа налево, сравнив слово с его реверсивным срезом <code>word[::-1]</code>. Выведите результат (True или False).",
+        "starter": "word = 'радар'\n\n# Проверьте, равен ли word своему развороту, и выведите:\n",
+        "expected": "True",
+        "hint": "word = 'радар'\nprint(word == word[::-1])",
+        "xp": 15
+      },
+      {
+        "id": "lvl1-04-t2",
+        "title": "Очистка и нормализация CSV-поля",
+        "desc": "Дана «грязная» строка из базы: <code>raw_text = '  user_name_profile  \\n'</code>. Удалите внешние пробельные символы и замените все нижние подчеркивания <code>'_'</code> на тире <code>'-'</code>. Выведите результат.",
+        "starter": "raw_text = '  user_name_profile  \\n'\n\n# Очистите строку и замените '_' на '-':\n",
+        "expected": "user-name-profile",
+        "hint": "raw_text = '  user_name_profile  \\n'\nclean = raw_text.strip().replace('_', '-')\nprint(clean)",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl1-05",
+    "level": "1",
+    "module": "Уровень 1. Базовый Синтаксис и Типы",
+    "title": "1.5. Форматирование строк: f-строки и модификаторы",
+    "badge": "1.5 f-strings",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>f-строки (Formatted string literals)</strong> появились в Python 3.6 и вычисляются во время выполнения, работая быстрее методов <code>format()</code> и оператора <code>%</code>.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Полезные возможности:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Округление float: <code>f\"{pi:.2f}\"</code> ➔ <code>3.14</code></li>\n                    <li>Дополнение нулями (padding): <code>f\"{val:05d}\"</code> (число 7 станет <code>00007</code>)</li>\n                    <li>Разделитель тысяч: <code>f\"{1000000:_}\"</code> ➔ <code>1_000_000</code></li>\n                    <li>Отладочный синтаксис (Python 3.8+): <code>f\"{x=}\"</code> выведет <code>x=42</code> вместе с именем переменной!</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl1-05-t1",
+        "title": "Форматирование ценника",
+        "desc": "Даны переменные <code>item = 'Ноутбук'</code> и <code>price = 89990.5</code>. С помощью f-строки сформируйте и выведите строку вида: <code>Товар: Ноутбук | Цена: 89990.50 руб.</code> (цена должна быть округлена ровно до 2 знаков после запятой).",
+        "starter": "item = 'Ноутбук'\nprice = 89990.5\n\n# Выведите отформатированную строку с ценой :.2f:\n",
+        "expected": "Товар: Ноутбук | Цена: 89990.50 руб.",
+        "hint": "item = 'Ноутбук'\nprice = 89990.5\nprint(f'Товар: {item} | Цена: {price:.2f} руб.')",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl1-06",
+    "level": "1",
+    "module": "Уровень 1. Базовый Синтаксис и Типы",
+    "title": "1.6. Ветвления if/elif/else и тернарный оператор",
+    "badge": "1.6 If/Else",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Условные операторы управляют потоком исполнения программы в зависимости от логических условий.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    status = \"admin\" if role == \"superuser\" else \"guest\"\n                </div>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Ключевые нюансы:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Оператор <code>elif</code> проверяется только тогда, когда предыдущие <code>if</code> и <code>elif</code> вернули <code>False</code>.</li>\n                    <li><strong>Тернарный оператор</strong> имеет вид: <code>значение_если_истина if условие else значение_если_ложь</code>. Используется для компактного присвоения переменным.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl1-06-t1",
+        "title": "Категоризация возраста",
+        "desc": "Дана переменная <code>age = 17</code>. Напишите тернарное выражение, которое сохраняет в переменную <code>status</code> строку <code>'adult'</code>, если <code>age >= 18</code>, и <code>'minor'</code> в противном случае. Выведите <code>status</code>.",
+        "starter": "age = 17\n\n# Напишите тернарный оператор для status и выведите его:\n",
+        "expected": "minor",
+        "hint": "age = 17\nstatus = 'adult' if age >= 18 else 'minor'\nprint(status)",
+        "xp": 15
+      }
+    ]
+  },
+  {
+    "id": "lvl1-07",
+    "level": "1",
+    "module": "Уровень 1. Базовый Синтаксис и Типы",
+    "title": "1.7. Циклы while, for, range, enumerate и zip",
+    "badge": "1.7 Loops",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Циклы позволяют многократно выполнять блок инструкций.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Фундаментальные инструменты итерации:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>range(start, stop, step)</code> — генерирует последовательность чисел без загрузки всех значений в память (ленивый генератор).</li>\n                    <li><code>enumerate(iterable, start=0)</code> — возвращает пары <code>(индекс, элемент)</code>, избавляя от ручного управления счетчиком.</li>\n                    <li><code>zip(seq1, seq2)</code> — сшивает две или более последовательностей в кортежи поэлементно. Прерывается, когда заканчивается самый короткий список.</li>\n                    <li>Блок <code>else</code> у циклов — выполняется <strong>только если цикл завершился естественным путем</strong> (без досрочного вызова <code>break</code>).</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl1-07-t1",
+        "title": "Нумерация элементов через enumerate",
+        "desc": "Дан список языков: <code>languages = ['Python', 'Rust', 'Go']</code>. Используя цикл <code>for</code> и функцию <code>enumerate(languages, start=1)</code>, выведите каждую строку в формате: <code>1: Python</code>, <code>2: Rust</code> и т.д.",
+        "starter": "languages = ['Python', 'Rust', 'Go']\n\n# Выведите нумерованный список через enumerate:\n",
+        "expected": "1: Python\n2: Rust\n3: Go",
+        "hint": "languages = ['Python', 'Rust', 'Go']\nfor idx, lang in enumerate(languages, start=1):\n    print(f'{idx}: {lang}')",
+        "xp": 20
+      },
+      {
+        "id": "lvl1-07-t2",
+        "title": "Склейка списков через zip",
+        "desc": "Даны два списка: <code>keys = ['id', 'role']</code> и <code>values = [42, 'admin']</code>. С помощью <code>zip(keys, values)</code> объедините их в словарь через вызов <code>dict(...)</code> и выведите результат.",
+        "starter": "keys = ['id', 'role']\nvalues = [42, 'admin']\n\n# Объедините через zip в словарь и выведите:\n",
+        "expected": "{'id': 42, 'role': 'admin'}",
+        "hint": "keys = ['id', 'role']\nvalues = [42, 'admin']\nresult = dict(zip(keys, values))\nprint(result)",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl1-08",
+    "level": "1",
+    "module": "Уровень 1. Базовый Синтаксис и Типы",
+    "title": "1.8. Сопоставление с образцом: Pattern Matching (match/case)",
+    "badge": "1.8 Match",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Конструкция <code>match / case</code> (PEP 634) появилась в Python 3.10. Это не просто аналог <code>switch/case</code> из C++, а мощный инструмент деструктуризации данных и проверки типов.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    match command.split():\n                        case [\"get\", key]:\n                            return cache.get(key)\n                        case [\"set\", key, value]:\n                            cache[key] = value\n                        case _:\n                            return \"Unknown command\"\n                </div>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Возможности:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Распаковка структур (списков, кортежей, словарей) прямо в образце.</li>\n                    <li>Ограничители (Guards): <code>case [x, y] if x > 0:</code>.</li>\n                    <li>Символ подстановки <code>_</code> (Wildcard) перехватывает любые несовпавшие случаи (default).</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl1-08-t1",
+        "title": "Парсинг команд через match/case",
+        "desc": "Дана переменная <code>cmd = ['move', 10, 20]</code>. Напишите конструкцию <code>match cmd:</code> с шаблоном <code>case ['move', x, y]:</code>, которая выводит строку <code>Смещение: X=10, Y=20</code>.",
+        "starter": "cmd = ['move', 10, 20]\n\n# Используйте match/case для разбора команды:\n",
+        "expected": "Смещение: X=10, Y=20",
+        "hint": "cmd = ['move', 10, 20]\nmatch cmd:\n    case ['move', x, y]:\n        print(f'Смещение: X={x}, Y={y}')",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl2-01",
+    "level": "2",
+    "module": "Уровень 2. Коллекции и Структуры",
+    "title": "2.1. Списки (list): методы, сортировка и deepcopy",
+    "badge": "2.1 Lists",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Список <code>list</code> — это изменяемый динамический массив указателей. Вставка в конец списка <code>.append()</code> и удаление с конца <code>.pop()</code> выполняются за амортизированное время <strong>$O(1)$</strong>. Вставка в середину <code>.insert(0, val)</code> требует сдвига всех элементов вправо и работает за <strong>$O(N)$</strong>.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Сортировка списков:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>list.sort(key=..., reverse=...)</code> — сортирует список <em>на месте (in-place)</em>, возвращает <code>None</code>.</li>\n                    <li><code>sorted(iterable, key=...)</code> — создает и возвращает <em>новый</em> отсортированный список, не трогая оригинал.</li>\n                </ul>\n                <div class=\"p-2.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-200 text-xs\">\n                    <strong>Копирование:</strong> <code>b = a.copy()</code> копирует только верхний уровень. Если внутри списка лежат другие списки или словари, они останутся общими по ссылке! Для полной независимости используют <code>copy.deepcopy(a)</code>.\n                </div>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl2-01-t1",
+        "title": "Сортировка по пользовательскому ключу",
+        "desc": "Дан список строк разной длины: <code>words = ['python', 'c', 'javascript', 'go']</code>. Отсортируйте список по возрастанию длины слов с помощью функции <code>sorted(words, key=len)</code> и выведите результат.",
+        "starter": "words = ['python', 'c', 'javascript', 'go']\n\n# Отсортируйте по длине слов и выведите:\n",
+        "expected": "['c', 'go', 'python', 'javascript']",
+        "hint": "words = ['python', 'c', 'javascript', 'go']\nprint(sorted(words, key=len))",
+        "xp": 20
+      },
+      {
+        "id": "lvl2-01-t2",
+        "title": "Защита вложенного списка через deepcopy",
+        "desc": "Импортируйте модуль <code>copy</code>. Создайте <code>original = [[1, 2], [3, 4]]</code>. Сделайте глубокую копию <code>cloned = copy.deepcopy(original)</code>. Добавьте в <code>cloned[0]</code> число <code>99</code>. Выведите исходный <code>original</code> и убедитесь, что он не изменился.",
+        "starter": "import copy\n\noriginal = [[1, 2], [3, 4]]\n# Сделайте deepcopy, измените cloned[0] и выведите original:\n",
+        "expected": "[[1, 2], [3, 4]]",
+        "hint": "import copy\noriginal = [[1, 2], [3, 4]]\ncloned = copy.deepcopy(original)\ncloned[0].append(99)\nprint(original)",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl2-02",
+    "level": "2",
+    "module": "Уровень 2. Коллекции и Структуры",
+    "title": "2.2. Кортежи (tuple) и распаковка последовательностей",
+    "badge": "2.2 Tuples",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Кортеж <code>tuple</code> — это <strong>неизменяемый (immutable)</strong> аналог списка. Кортеж занимает меньше памяти в CPython и может использоваться в качестве ключа словаря или элемента множества (при условии, что все его элементы также неизменяемы).</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Распаковка (Extended Unpacking):</h4>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    head, *middle, tail = [1, 2, 3, 4, 5]\n                    # head = 1, middle = [2, 3, 4], tail = 5\n                </div>\n                <p class=\"text-xs text-theme-muted\">Символ <code>*</code> собирает все промежуточные или оставшиеся элементы в список.</p>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl2-02-t1",
+        "title": "Выделение первого, хвоста и последнего",
+        "desc": "Дан список версий: <code>releases = ['v1.0', 'v1.1', 'v1.2', 'v2.0']</code>. Используя расширенную распаковку <code>first, *middle, last = releases</code>, выведите кортеж <code>(first, last)</code>.",
+        "starter": "releases = ['v1.0', 'v1.1', 'v1.2', 'v2.0']\n\n# Распакуйте first, *middle, last и выведите (first, last):\n",
+        "expected": "('v1.0', 'v2.0')",
+        "hint": "releases = ['v1.0', 'v1.1', 'v1.2', 'v2.0']\nfirst, *middle, last = releases\nprint((first, last))",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl2-03",
+    "level": "2",
+    "module": "Уровень 2. Коллекции и Структуры",
+    "title": "2.3. Словари (dict): хэш-таблицы, get() и оператор |",
+    "badge": "2.3 Dicts",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Словарь <code>dict</code> реализует хэш-таблицу. Поиск, вставка и удаление выполняются в среднем за <strong>$O(1)$</strong>.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Ключевые правила работы:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Ключом словаря может быть только <strong>хэшируемый (hashable)</strong> объект (строки, числа, кортежи). Списки и словари быть ключами не могут!</li>\n                    <li>Безопасное чтение: <code>d.get('key', default)</code> не выбрасывает ошибку <code>KeyError</code>, если ключа нет, а возвращает дефолтное значение.</li>\n                    <li>Слияние словарей (Python 3.9+): оператор <code>a | b</code> объединяет словари, при этом ключи из <code>b</code> перезаписывают ключи из <code>a</code>.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl2-03-t1",
+        "title": "Безопасное получение и слияние через |",
+        "desc": "Даны настройки по умолчанию <code>defaults = {'theme': 'dark', 'font': 'JetBrains'}</code> и пользовательские <code>user = {'theme': 'light'}</code>. Объедините их через <code>defaults | user</code> и выведите полученный словарь.",
+        "starter": "defaults = {'theme': 'dark', 'font': 'JetBrains'}\nuser = {'theme': 'light'}\n\n# Объедините через оператор | и выведите:\n",
+        "expected": "{'theme': 'light', 'font': 'JetBrains'}",
+        "hint": "defaults = {'theme': 'dark', 'font': 'JetBrains'}\nuser = {'theme': 'light'}\nprint(defaults | user)",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl2-04",
+    "level": "2",
+    "module": "Уровень 2. Коллекции и Структуры",
+    "title": "2.4. Множества (set, frozenset) и алгебра множеств",
+    "badge": "2.4 Sets",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Множество <code>set</code> — это изменяемая коллекция <strong>уникальных</strong> хэшируемых элементов. Проверка вхождения <code>x in my_set</code> работает за <strong>$O(1)$</strong>, в отличие от $O(N)$ у списка.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Операции алгебры множеств:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>A | B</code> — объединение (union): элементы из A или B.</li>\n                    <li><code>A & B</code> — пересечение (intersection): элементы, общие для обоих множеств.</li>\n                    <li><code>A - B</code> — разность (difference): элементы, присутствующие в A, но отсутствующие в B.</li>\n                    <li><code>A ^ B</code> — симметрическая разность: элементы в A или B, но не в обоих одновременно.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl2-04-t1",
+        "title": "Поиск общих прав доступа",
+        "desc": "Даны права двух ролей: <code>role_admin = {'read', 'write', 'delete'}</code> и <code>role_manager = {'read', 'write', 'report'}</code>. Найдите общие права с помощью пересечения <code>&</code>, отсортируйте полученный список через <code>sorted(...)</code> и выведите его.",
+        "starter": "role_admin = {'read', 'write', 'delete'}\nrole_manager = {'read', 'write', 'report'}\n\n# Найдите пересечение &, отсортируйте и выведите:\n",
+        "expected": "['read', 'write']",
+        "hint": "role_admin = {'read', 'write', 'delete'}\nrole_manager = {'read', 'write', 'report'}\ncommon = sorted(role_admin & role_manager)\nprint(common)",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl2-05",
+    "level": "2",
+    "module": "Уровень 2. Коллекции и Структуры",
+    "title": "2.5. Абстракции коллекций (Comprehensions)",
+    "badge": "2.5 Comprehensions",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>Comprehensions</strong> — это идиоматический и быстрый способ трансформации и фильтрации данных без явных циклов <code>for</code> и вызовов <code>append()</code>.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    [трансформация for элемент in источник if условие]\n                </div>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Виды генераторов:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>List Comprehension: <code>[x * 2 for x in nums if x > 0]</code></li>\n                    <li>Dict Comprehension: <code>{k: v for k, v in pairs}</code></li>\n                    <li>Set Comprehension: <code>{x % 10 for x in nums}</code></li>\n                    <li>Генераторное выражение: <code>(x for x in nums)</code> — ленивый итератор, не выделяющий память под всю последовательность.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl2-05-t1",
+        "title": "Инвертирование словаря через Dict Comprehension",
+        "desc": "Дан словарь кодов статусов: <code>codes = {'OK': 200, 'NOT_FOUND': 404, 'SERVER_ERROR': 500}</code>. С помощью Dict Comprehension создайте инвертированный словарь, где ключами станут числа, а значениями — строки. Выведите результат.",
+        "starter": "codes = {'OK': 200, 'NOT_FOUND': 404, 'SERVER_ERROR': 500}\n\n# Инвертируйте {v: k for ...} и выведите:\n",
+        "expected": "{200: 'OK', 404: 'NOT_FOUND', 500: 'SERVER_ERROR'}",
+        "hint": "codes = {'OK': 200, 'NOT_FOUND': 404, 'SERVER_ERROR': 500}\ninv = {v: k for k, v in codes.items()}\nprint(inv)",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl2-06",
+    "level": "2",
+    "module": "Уровень 2. Коллекции и Структуры",
+    "title": "2.6. Модуль collections: Counter, deque, defaultdict",
+    "badge": "2.6 Collections",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Модуль <code>collections</code> предоставляет специализированные контейнеры данных, оптимизированные под частые задачи.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Три главных инструмента:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>Counter(iterable)</code> — автоматически подсчитывает частоту появления элементов. Метод <code>.most_common(k)</code> находит топ-k элементов.</li>\n                    <li><code>defaultdict(factory)</code> — словарь, который при обращении к несуществующему ключу автоматически создает значение с помощью переданной функции-фабрики (например, <code>list</code> или <code>int</code>).</li>\n                    <li><code>deque</code> — двусторонняя очередь с быстрым $O(1)$ добавлением и удалением элементов как слева (<code>appendleft/popleft</code>), так и справа.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl2-06-t1",
+        "title": "Подсчет частоты слов через Counter",
+        "desc": "Импортируйте <code>Counter</code> из <code>collections</code>. Дан список тегов: <code>tags = ['python', 'web', 'python', 'ai', 'python', 'ai']</code>. Найдите 1 самый частый тег с помощью метода <code>.most_common(1)</code> и выведите результат.",
+        "starter": "from collections import Counter\n\ntags = ['python', 'web', 'python', 'ai', 'python', 'ai']\n# Найдите топ-1 самый частый элемент и выведите:\n",
+        "expected": "[('python', 3)]",
+        "hint": "from collections import Counter\ntags = ['python', 'web', 'python', 'ai', 'python', 'ai']\nprint(Counter(tags).most_common(1))",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl3-01",
+    "level": "3",
+    "module": "Уровень 3. Функции и ФП",
+    "title": "3.1. Аргументы: *args, **kwargs и ловушка изменяемых значений",
+    "badge": "3.1 Args",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Функции объявляются ключевым словом <code>def</code>. Они могут принимать позиционные, именованные и переменные аргументы.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    def request(url, *args, timeout=30, **kwargs):\n                </div>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>*args</code> собирает избыточные позиционные аргументы в кортеж (<code>tuple</code>).</li>\n                    <li><code>**kwargs</code> собирает избыточные именованные аргументы в словарь (<code>dict</code>).</li>\n                </ul>\n                <div class=\"p-2.5 rounded border border-red-500/30 bg-red-500/10 text-red-200 text-xs\">\n                    <strong>Опаснейшая ловушка Python:</strong> Значения аргументов по умолчанию вычисляются <strong>один раз при компиляции функции</strong>, а не при каждом вызове. Если указать <code>def add(item, lst=[])</code>, один и тот же список будет накапливать значения между всеми вызовами! Всегда используйте <code>lst=None</code>.\n                </div>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl3-01-t1",
+        "title": "Исправление изменяемого аргумента по умолчанию",
+        "desc": "Напишите функцию <code>append_to_list(val, target=None)</code>, которая корректно создает новый список, если <code>target is None</code>, добавляет <code>val</code> и возвращает список. Вызовите её дважды: <code>print(append_to_list(1))</code> и <code>print(append_to_list(2))</code>.",
+        "starter": "# Напишите правильную функцию append_to_list:\n\n# Вызовите ее дважды для 1 и 2:\n",
+        "expected": "[1]\n[2]",
+        "hint": "def append_to_list(val, target=None):\n    if target is None:\n        target = []\n    target.append(val)\n    return target\n\nprint(append_to_list(1))\nprint(append_to_list(2))",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl3-02",
+    "level": "3",
+    "module": "Уровень 3. Функции и ФП",
+    "title": "3.2. Области видимости (LEGB) и ключевые слова global/nonlocal",
+    "badge": "3.2 LEGB",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>При поиске переменной Python всегда следует правилу <strong>LEGB</strong> в строгом порядке:</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    1. Local (текущая функция) ➔\n                    2. Enclosing (внешняя объемлющая функция) ➔\n                    3. Global (модуль) ➔\n                    4. Built-in (встроенные: print, len, range)\n                </div>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Модификаторы областей видимости:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>global x</code> — указывает, что присвоение внутри функции должно перезаписать переменную на уровне модуля.</li>\n                    <li><code>nonlocal x</code> — указывает, что присвоение во вложенной функции должно перезаписать переменную из родительской (enclosing) функции (используется при создании замыканий).</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl3-02-t1",
+        "title": "Создание счетчика на замыкании с nonlocal",
+        "desc": "Напишите функцию <code>make_counter()</code>, которая инициализирует <code>count = 0</code> и возвращает внутреннюю функцию <code>inc()</code>, увеличивающую <code>count</code> на 1 с помощью <code>nonlocal</code> и возвращающую его. Создайте <code>c = make_counter()</code>, вызовите <code>print(c())</code>, а затем еще раз <code>print(c())</code>.",
+        "starter": "# Напишите make_counter со счетчиком на nonlocal:\n",
+        "expected": "1\n2",
+        "hint": "def make_counter():\n    count = 0\n    def inc():\n        nonlocal count\n        count += 1\n        return count\n    return inc\n\nc = make_counter()\nprint(c())\nprint(c())",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl3-03",
+    "level": "3",
+    "module": "Уровень 3. Функции и ФП",
+    "title": "3.3. Lambda-функции и функции первого класса",
+    "badge": "3.3 Lambda",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>В Python функции являются <strong>объектами первого класса</strong>: их можно присваивать переменным, передавать в другие функции в качестве аргументов и возвращать из функций.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Анонимные функции lambda:</h4>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    lambda arg1, arg2: выражение\n                </div>\n                <p class=\"text-xs text-theme-muted\">Лямбды содержат строго одно выражение, результат которого автоматически возвращается. Чаще всего они применяются в аргументе <code>key</code> при сортировке или в функциях <code>map</code>/<code>filter</code>.</p>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl3-03-t1",
+        "title": "Сортировка кортежей по второму полю",
+        "desc": "Дан список пользователей с очками: <code>players = [('Alice', 50), ('Bob', 80), ('Charlie', 20)]</code>. Отсортируйте список по убыванию очков с помощью <code>sorted(players, key=lambda p: p[1], reverse=True)</code> и выведите результат.",
+        "starter": "players = [('Alice', 50), ('Bob', 80), ('Charlie', 20)]\n\n# Отсортируйте по очкам по убыванию и выведите:\n",
+        "expected": "[('Bob', 80), ('Alice', 50), ('Charlie', 20)]",
+        "hint": "players = [('Alice', 50), ('Bob', 80), ('Charlie', 20)]\nprint(sorted(players, key=lambda p: p[1], reverse=True))",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl3-04",
+    "level": "3",
+    "module": "Уровень 3. Функции и ФП",
+    "title": "3.4. Декораторы и сохранение метаданных с functools.wraps",
+    "badge": "3.4 Decorators",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>Декоратор</strong> — это функция, которая принимает другую функцию в качестве аргумента, модифицирует её поведение (оборачивает) и возвращает новую функцию.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    @my_decorator\n                    def target_func(): ...\n                    # Эквивалентно: target_func = my_decorator(target_func)\n                </div>\n                <div class=\"p-2.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-200 text-xs\">\n                    <strong>Обязательно:</strong> Внутреннюю функцию-обертку всегда декорируют <code>@functools.wraps(func)</code>. Иначе оригинальное имя <code>func.__name__</code> и документация <code>func.__doc__</code> затрутся именем внутренней обертки!\n                </div>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl3-04-t1",
+        "title": "Декоратор логирования вызова",
+        "desc": "Напишите декоратор <code>logger(func)</code>, который перед вызовом функции печатает строку <code>'CALL: ' + func.__name__</code>, затем вызывает функцию и возвращает её результат. Оберните функцию <code>def add(a, b): return a + b</code> и вызовите <code>print(add(3, 4))</code>.",
+        "starter": "import functools\n\n# Напишите декоратор logger и функцию add:\n",
+        "expected": "CALL: add\n7",
+        "hint": "import functools\n\ndef logger(func):\n    @functools.wraps(func)\n    def wrapper(*args, **kwargs):\n        print(f'CALL: {func.__name__}')\n        return func(*args, **kwargs)\n    return wrapper\n\n@logger\ndef add(a, b):\n    return a + b\n\nprint(add(3, 4))",
+        "xp": 30
+      }
+    ]
+  },
+  {
+    "id": "lvl3-05",
+    "level": "3",
+    "module": "Уровень 3. Функции и ФП",
+    "title": "3.5. Модули functools (lru_cache) и itertools",
+    "badge": "3.5 Itertools",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Модули <code>functools</code> и <code>itertools</code> содержат высокооптимизированные C-инструменты для функционального программирования.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Ключевые утилиты:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>@functools.lru_cache(maxsize=128)</code> — кэширует результаты вызова функции по её аргументам (мемоизация), превращая экспоненциальную сложность рекурсии в линейную $O(N)$.</li>\n                    <li><code>itertools.chain(*iterables)</code> — сцепляет несколько генераторов в единую непрерывную последовательность без создания промежуточных списков.</li>\n                    <li><code>itertools.product(A, B)</code> — прямое декартово произведение коллекций.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl3-05-t1",
+        "title": "Мгновенные числа Фибоначчи через lru_cache",
+        "desc": "Импортируйте <code>lru_cache</code> из <code>functools</code>. Напишите рекурсивную функцию <code>fib(n)</code> с декоратором <code>@lru_cache</code>: для <code>n < 2</code> возвращает <code>n</code>, иначе <code>fib(n-1) + fib(n-2)</code>. Вычислите и выведите <code>fib(30)</code>.",
+        "starter": "from functools import lru_cache\n\n# Напишите fib(n) с кэшированием и выведите fib(30):\n",
+        "expected": "832040",
+        "hint": "from functools import lru_cache\n\n@lru_cache(maxsize=None)\ndef fib(n):\n    if n < 2:\n        return n\n    return fib(n-1) + fib(n-2)\n\nprint(fib(30))",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl4-01",
+    "level": "4",
+    "module": "Уровень 4. Ошибки и Библиотека",
+    "title": "4.1. Обработка исключений: try, except, else, finally",
+    "badge": "4.1 Exceptions",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>В Python ошибки обрабатываются через механизм исключений. Все стандартные ошибки наследуются от класса <code>Exception</code>.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    try: risky_op()\n                    except SpecificError as err: handle(err)\n                    else: success_only()\n                    finally: always_cleanup()\n                </div>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Никогда не используйте «голый» перехват <code>except:</code> без указания типа ошибки — он перехватит даже системные сигналы остановки (<code>KeyboardInterrupt</code>, <code>SystemExit</code>).</li>\n                    <li>Блок <code>else</code> выполняется только тогда, когда в блоке <code>try</code> не возникло никаких исключений.</li>\n                    <li>Блок <code>finally</code> выполняется <strong>всегда</strong>, даже если программа внутри try выполнила <code>return</code> или упала с необработанным исключением.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl4-01-t1",
+        "title": "Безопасное деление с блоком else",
+        "desc": "Напишите функцию <code>safe_div(a, b)</code>. Внутри конструкции <code>try</code> разделите <code>a / b</code>. При <code>ZeroDivisionError</code> верните <code>'Zero'</code>, а при успешном делении (в блоке <code>else</code>) верните результат. Вызовите функцию для <code>(10, 2)</code> и <code>(10, 0)</code>.",
+        "starter": "# Напишите safe_div и протестируйте:\n",
+        "expected": "5.0\nZero",
+        "hint": "def safe_div(a, b):\n    try:\n        res = a / b\n    except ZeroDivisionError:\n        return 'Zero'\n    else:\n        return res\n\nprint(safe_div(10, 2))\nprint(safe_div(10, 0))",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl4-02",
+    "level": "4",
+    "module": "Уровень 4. Ошибки и Библиотека",
+    "title": "4.2. Менеджеры контекста (with) и модуль contextlib",
+    "badge": "4.2 Contexts",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Менеджер контекста гарантирует своевременное освобождение ресурсов (закрытие сокетов, освобождение блокировок, закрытие файлов) даже в случае сбоя.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Протокол менеджера контекста:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>__enter__(self)</code> — вызывается при входе в блок <code>with</code>. Значение, которое возвращает метод, привязывается к переменной в секции <code>as target</code>.</li>\n                    <li><code>__exit__(self, exc_type, exc_val, exc_tb)</code> — вызывается при выходе из блока. Если метод возвращает <code>True</code>, исключение подавляется.</li>\n                </ul>\n                <p class=\"text-xs text-theme-muted\">Альтернативный легкий способ создания менеджера контекста — декоратор <code>@contextlib.contextmanager</code> поверх функции-генератора с единственным <code>yield</code>.</p>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl4-02-t1",
+        "title": "Кастомный таймер-контекст на contextlib",
+        "desc": "Импортируйте <code>contextmanager</code> из <code>contextlib</code>. Напишите генераторный менеджер контекста <code>audit_log()</code>, который перед выполнением печатает <code>'START'</code>, затем делает <code>yield</code>, а в блоке <code>finally</code> печатает <code>'FINISH'</code>. Продемонстрируйте его работу в блоке <code>with audit_log(): print('WORKING')</code>.",
+        "starter": "from contextlib import contextmanager\n\n# Напишите контекстный менеджер audit_log:\n",
+        "expected": "START\nWORKING\nFINISH",
+        "hint": "from contextlib import contextmanager\n\n@contextmanager\ndef audit_log():\n    print('START')\n    try:\n        yield\n    finally:\n        print('FINISH')\n\nwith audit_log():\n    print('WORKING')",
+        "xp": 30
+      }
+    ]
+  },
+  {
+    "id": "lvl4-03",
+    "level": "4",
+    "module": "Уровень 4. Ошибки и Библиотека",
+    "title": "4.3. Файловая система: pathlib.Path, JSON и сериализация",
+    "badge": "4.3 Pathlib",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>В современном Python вместо устаревшего процедурного модуля <code>os.path</code> используется объектно-ориентированный <strong><code>pathlib.Path</code></strong>.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    p = Path(\"data\") / \"users.json\"\n                    p.write_text(json.dumps(payload), encoding=\"utf-8\")\n                    data = json.loads(p.read_text(encoding=\"utf-8\"))\n                </div>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Оператор <code>/</code> перегружен для удобного объединения путей независимо от ОС (Windows обратные слеши, Linux прямые).</li>\n                    <li>Модуль <code>json</code>: <code>dumps</code>/<code>loads</code> работают со строками, <code>dump</code>/<code>load</code> — напрямую с файловыми объектами.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl4-03-t1",
+        "title": "Сериализация структуры в JSON",
+        "desc": "Импортируйте <code>json</code>. Дан словарь: <code>payload = {'service': 'api', 'port': 8000, 'active': True}</code>. Преобразуйте его в JSON-строку с сортировкой ключей (<code>sort_keys=True</code>) и выведите её.",
+        "starter": "import json\n\npayload = {'service': 'api', 'port': 8000, 'active': True}\n# Преобразуйте в JSON с sort_keys=True и выведите:\n",
+        "expected": "{\"active\": true, \"port\": 8000, \"service\": \"api\"}",
+        "hint": "import json\npayload = {'service': 'api', 'port': 8000, 'active': True}\nprint(json.dumps(payload, sort_keys=True))",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl4-04",
+    "level": "4",
+    "module": "Уровень 4. Ошибки и Библиотека",
+    "title": "4.4. Стандартная библиотека: регулярные выражения (re)",
+    "badge": "4.4 Regex",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Модуль <code>re</code> предназначен для сопоставления текста с шаблонами регулярных выражений (Regular Expressions).</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Базовые функции:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>re.findall(pattern, text)</code> — находит все непересекающиеся совпадения и возвращает их списком строк.</li>\n                    <li><code>re.search(pattern, text)</code> — ищет первое совпадение в любом месте строки, возвращая объект <code>Match</code> или <code>None</code>.</li>\n                    <li><code>re.sub(pattern, repl, text)</code> — заменяет совпадения на указанную строку или результат функции.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl4-04-t1",
+        "title": "Извлечение чисел из строки через regex",
+        "desc": "Импортируйте <code>re</code>. Дана строка лога: <code>log = 'Orders: 142 items, total cost: 5800 USD, discount: 200'</code>. Используя шаблон <code>r'\\d+'</code> и функцию <code>re.findall</code>, извлеките все числа, преобразуйте их в целые числа (<code>int</code>), просуммируйте и выведите общую сумму.",
+        "starter": "import re\n\nlog = 'Orders: 142 items, total cost: 5800 USD, discount: 200'\n# Извлеките числа, просуммируйте и выведите:\n",
+        "expected": "6142",
+        "hint": "import re\nlog = 'Orders: 142 items, total cost: 5800 USD, discount: 200'\nnumbers = [int(x) for x in re.findall(r'\\d+', log)]\nprint(sum(numbers))",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl5-01",
+    "level": "5",
+    "module": "Уровень 5. ООП и Архитектура",
+    "title": "5.1. Классы, инкапсуляция и свойства (@property)",
+    "badge": "5.1 Classes",
+    "difficulty": "Basic",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Класс — это чертеж (шаблон) для создания объектов. Конструктор <code>__init__(self, ...)</code> инициализирует атрибуты конкретного экземпляра.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Инкапсуляция и свойства:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Атрибуты с одним подчеркиванием <code>_attr</code> — защищенные (соглашение для разработчиков: не трогать снаружи).</li>\n                    <li>Декоратор <code>@property</code> превращает вызов метода в обращение к обычному атрибуту без скобок <code>obj.val</code>.</li>\n                    <li>Сеттер <code>@prop.setter</code> позволяет проверять и валидировать входящие данные перед записью.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl5-01-t1",
+        "title": "Класс с валидацией через @property",
+        "desc": "Создайте класс <code>Account</code> с конструктором <code>__init__(self, balance)</code>. Сделайте скрытый атрибут <code>_balance</code>, геттер <code>@property def balance(self)</code> и сеттер <code>@balance.setter</code>, который выбрасывает <code>ValueError('Negative balance')</code>, если новое значение меньше 0. Продемонстрируйте работу: создайте аккаунт с балансом 100, затем присвойте 250 и выведите <code>acc.balance</code>.",
+        "starter": "# Напишите класс Account с @property и сеттером:\n",
+        "expected": "250",
+        "hint": "class Account:\n    def __init__(self, balance):\n        self.balance = balance\n    @property\n    def balance(self):\n        return self._balance\n    @balance.setter\n    def balance(self, val):\n        if val < 0:\n            raise ValueError('Negative balance')\n        self._balance = val\n\nacc = Account(100)\nacc.balance = 250\nprint(acc.balance)",
+        "xp": 30
+      }
+    ]
+  },
+  {
+    "id": "lvl5-02",
+    "level": "5",
+    "module": "Уровень 5. ООП и Архитектура",
+    "title": "5.2. Наследование, super() и полиморфизм (MRO)",
+    "badge": "5.2 Inheritance",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Наследование позволяет дочерним классам расширять функционал родительских. Функция <code>super()</code> обращается к методам родительского класса в соответствии с порядком разрешения методов <strong>MRO (Method Resolution Order)</strong>.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    class Child(Parent):\n                        def __init__(self, x, y):\n                            super().__init__(x)\n                            self.y = y\n                </div>\n                <p class=\"text-xs text-theme-muted\">При множественном наследовании Python использует алгоритм <strong>C3-линеаризации</strong>. Порядок вызова методов можно посмотреть в атрибуте <code>ClassName.__mro__</code>.</p>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl5-02-t1",
+        "title": "Расширение родителя через super()",
+        "desc": "Создайте базовый класс <code>Worker(name)</code> с методом <code>info()</code>, возвращающим <code>'Name: ' + self.name</code>. Создайте дочерний класс <code>Developer(Worker)</code>, принимающий <code>(name, language)</code>, вызывающий конструктор родителя через <code>super().__init__(name)</code> и переопределяющий <code>info()</code>: возвращает строку вида <code>'Name: Alice | Lang: Python'</code>. Создайте объект и выведите результат вызова <code>info()</code>.",
+        "starter": "# Напишите Worker и Developer с super():\n",
+        "expected": "Name: Alice | Lang: Python",
+        "hint": "class Worker:\n    def __init__(self, name):\n        self.name = name\n    def info(self):\n        return f'Name: {self.name}'\n\nclass Developer(Worker):\n    def __init__(self, name, language):\n        super().__init__(name)\n        self.language = language\n    def info(self):\n        return f'{super().info()} | Lang: {self.language}'\n\ndev = Developer('Alice', 'Python')\nprint(dev.info())",
+        "xp": 30
+      }
+    ]
+  },
+  {
+    "id": "lvl5-03",
+    "level": "5",
+    "module": "Уровень 5. ООП и Архитектура",
+    "title": "5.3. Методы класса (@classmethod) и статические методы (@staticmethod)",
+    "badge": "5.3 Methods",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>В Python методы делятся на три категории по контексту их вызова:</p>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><strong>Методы экземпляра:</strong> первый аргумент <code>self</code> (доступ к состоянию объекта).</li>\n                    <li><strong>Методы класса <code>@classmethod</code>:</strong> первый аргумент <code>cls</code> (ссылка на сам класс). Часто используются как <em>альтернативные фабричные конструкторы</em> (например, создание объекта из JSON-строки или словаря).</li>\n                    <li><strong>Статические методы <code>@staticmethod</code>:</strong> не получают ни <code>self</code>, ни <code>cls</code>. Это обычные изолированные утилитные функции, логически сгруппированные внутри пространства имен класса.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl5-03-t1",
+        "title": "Альтернативный конструктор из строки",
+        "desc": "Создайте класс <code>User(name, email)</code>. Добавьте метод класса <code>@classmethod from_string(cls, data_str)</code>, который принимает строку вида <code>'Bob;bob@mail.com'</code>, делит её по <code>;</code> и возвращает новый экземпляр <code>cls(name, email)</code>. Проверьте: создайте объект через <code>User.from_string('Bob;bob@mail.com')</code> и выведите <code>f'{u.name}: {u.email}'</code>.",
+        "starter": "# Создайте User и фабричный @classmethod from_string:\n",
+        "expected": "Bob: bob@mail.com",
+        "hint": "class User:\n    def __init__(self, name, email):\n        self.name = name\n        self.email = email\n    @classmethod\n    def from_string(cls, data_str):\n        name, email = data_str.split(';')\n        return cls(name, email)\n\nu = User.from_string('Bob;bob@mail.com')\nprint(f'{u.name}: {u.email}')",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl5-04",
+    "level": "5",
+    "module": "Уровень 5. ООП и Архитектура",
+    "title": "5.4. Магические (Dunder) методы и перегрузка операторов",
+    "badge": "5.4 Dunder",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>Dunder-методы (Double Underscore)</strong> формируют модель данных Python (Python Data Model). Переопределяя их, вы интегрируете свои классы в синтаксис языка.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Основные методы:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>__str__</code> — читаемое строковое представление для пользователя (функция <code>print()</code>).</li>\n                    <li><code>__repr__</code> — однозначное отладочное представление (для разработчика).</li>\n                    <li><code>__len__</code> — поддержка вызова <code>len(obj)</code>.</li>\n                    <li><code>__add__</code>, <code>__sub__</code> — перегрузка математических операторов <code>+</code> и <code>-</code>.</li>\n                    <li><code>__eq__</code> — перегрузка сравнения <code>==</code>.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl5-04-t1",
+        "title": "Двумерный вектор с перегрузкой сложения",
+        "desc": "Создайте класс <code>Vector(x, y)</code>. Реализуйте метод <code>__add__(self, other)</code>, который складывает координаты двух векторов и возвращает новый <code>Vector</code>, и метод <code>__repr__(self)</code>, возвращающий строку <code>f'Vector({self.x}, {self.y})'</code>. Сложите <code>Vector(1, 2) + Vector(3, 4)</code> и выведите результат.",
+        "starter": "# Напишите класс Vector с __add__ и __repr__:\n",
+        "expected": "Vector(4, 6)",
+        "hint": "class Vector:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n    def __add__(self, other):\n        return Vector(self.x + other.x, self.y + other.y)\n    def __repr__(self):\n        return f'Vector({self.x}, {self.y})'\n\nprint(Vector(1, 2) + Vector(3, 4))",
+        "xp": 30
+      }
+    ]
+  },
+  {
+    "id": "lvl5-05",
+    "level": "5",
+    "module": "Уровень 5. ООП и Архитектура",
+    "title": "5.5. Современные датаклассы: @dataclass",
+    "badge": "5.5 Dataclass",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Модуль <code>dataclasses</code> (PEP 557) автоматически генерирует шаблонные методы <code>__init__</code>, <code>__repr__</code>, <code>__eq__</code> на основе аннотаций типов атрибутов.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    @dataclass(frozen=True, slots=True)\n                    class Point:\n                        x: float\n                        y: float\n                </div>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Параметр <code>frozen=True</code> делает экземпляры неизменяемыми (попытка изменить поле вызовет <code>FrozenInstanceError</code>) и позволяет хэшировать объекты.</li>\n                    <li>Параметр <code>slots=True</code> отключает словарь <code>__dict__</code>, экономя память и ускоряя доступ к полям.</li>\n                    <li>Для изменяемых полей по умолчанию используют фабрику: <code>tags: list = field(default_factory=list)</code>.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl5-05-t1",
+        "title": "Неизменяемый датакласс метрики",
+        "desc": "Импортируйте <code>dataclass</code> из <code>dataclasses</code>. Создайте неизменяемый датакласс <code>Metric</code> с полями <code>name: str</code> и <code>value: float</code>. Создайте экземпляр <code>m = Metric('cpu_load', 85.5)</code> и выведите его стандартный <code>repr</code> через <code>print(m)</code>.",
+        "starter": "from dataclasses import dataclass\n\n# Объявите @dataclass(frozen=True) Metric и выведите объект:\n",
+        "expected": "Metric(name='cpu_load', value=85.5)",
+        "hint": "from dataclasses import dataclass\n\n@dataclass(frozen=True)\nclass Metric:\n    name: str\n    value: float\n\nm = Metric('cpu_load', 85.5)\nprint(m)",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl6-01",
+    "level": "6",
+    "module": "Уровень 6. Продвинутый CPython",
+    "title": "6.1. Генераторы, протокол итератора, yield и yield from",
+    "badge": "6.1 Generators",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Генераторы производят значения «на лету» (Lazy evaluation), удерживая в памяти только текущее состояние и возвращая значение по оператору <code>yield</code>.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Протокол итератора:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Объект реализует методы <code>__iter__()</code> (возвращает сам итератор) и <code>__next__()</code>.</li>\n                    <li>Когда элементы заканчиваются, итератор выбрасывает исключение <code>StopIteration</code>.</li>\n                    <li>Конструкция <code>yield from sub_gen</code> делегирует выработку значений вложенному генератору.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl6-01-t1",
+        "title": "Кастомный генератор диапазона чисел",
+        "desc": "Напишите функцию-генератор <code>my_range(start, stop)</code>, которая по очереди возвращает числа от <code>start</code> до <code>stop</code> (не включая <code>stop</code>) с помощью <code>yield</code>. Преобразуйте результат вызова <code>my_range(3, 7)</code> в список через <code>list()</code> и выведите его.",
+        "starter": "# Напишите генератор my_range с yield:\n",
+        "expected": "[3, 4, 5, 6]",
+        "hint": "def my_range(start, stop):\n    curr = start\n    while curr < stop:\n        yield curr\n        curr += 1\n\nprint(list(my_range(3, 7)))",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl6-02",
+    "level": "6",
+    "module": "Уровень 6. Продвинутый CPython",
+    "title": "6.2. Дескрипторы и протокол доступа к атрибутам",
+    "badge": "6.2 Descriptors",
+    "difficulty": "Advanced",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>Дескриптор</strong> — это объект, который управляет чтением, записью и удалением атрибутов другого класса через методы <code>__get__</code>, <code>__set__</code> и <code>__delete__</code>.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    class Descriptor:\n                        def __get__(self, instance, owner): ...\n                        def __set__(self, instance, value): ...\n                </div>\n                <p class=\"text-xs text-theme-muted\">Под капотом CPython все ключевые механизмы ООП — <code>@property</code>, обычные методы, <code>@classmethod</code> и <code>@staticmethod</code> — реализованы именно как дескрипторы!</p>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl6-03",
+    "level": "6",
+    "module": "Уровень 6. Продвинутый CPython",
+    "title": "6.3. Метапрограммирование, __new__ и __init_subclass__",
+    "badge": "6.3 Meta",
+    "difficulty": "Advanced",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Метапрограммирование позволяет коду исследовать или модифицировать классы во время их объявления.</p>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>__new__(cls, *args, **kwargs)</code> — статический метод создания самого объекта (выделение памяти). Вызывается строго <em>до</em> <code>__init__</code>. На нем строят паттерн Singleton.</li>\n                    <li><code>__init_subclass__(cls, **kwargs)</code> (PEP 487) — современный и лаконичный хук, вызываемый в момент, когда от текущего класса наследуется дочерний класс. Заменяет 90% громоздких метаклассов.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl6-04",
+    "level": "6",
+    "module": "Уровень 6. Продвинутый CPython",
+    "title": "6.4. Статическая типизация (Type Hinting & Generics)",
+    "badge": "6.4 Typing",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Аннотации типов повышают надежность кода и позволяют статическим анализаторам (<strong>Mypy</strong>, <strong>Pyright</strong>) находить баги до запуска программы.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    # Синтаксис Python 3.10+ и 3.12 Generics:\n                    def find_first[T](items: list[T], default: T | None = None) -> T | None:\n                </div>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Оператор <code>|</code> объединяет типы (заменяет устаревший <code>Union[int, str]</code>).</li>\n                    <li><code>typing.Protocol</code> — структурная типизация («статическая утиная типизация»). Класс удовлетворяет протоколу, если имеет требуемые методы, без явного наследования!</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl6-04-t1",
+        "title": "Аннотированная функция первого элемента",
+        "desc": "Напишите функцию <code>first(items: list[int]) -> int | None</code>, которая возвращает первый элемент списка или <code>None</code>, если список пуст. Выведите результат для <code>[42, 99]</code> и <code>[]</code>.",
+        "starter": "# Напишите аннотированную функцию first:\n",
+        "expected": "42\nNone",
+        "hint": "def first(items: list[int]) -> int | None:\n    return items[0] if items else None\n\nprint(first([42, 99]))\nprint(first([]))",
+        "xp": 20
+      }
+    ]
+  },
+  {
+    "id": "lvl6-05",
+    "level": "6",
+    "module": "Уровень 6. Продвинутый CPython",
+    "title": "6.5. Внутренности CPython: Байт-код, Сборка мусора и GIL",
+    "badge": "6.5 CPython",
+    "difficulty": "Advanced",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Понимание внутреннего устройства виртуальной машины необходимо для написания высокопроизводительного кода.</p>\n                <h4 class=\"text-xs font-bold uppercase tracking-wider text-theme-emerald mt-2\">Три кита CPython:</h4>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><strong>Байт-код:</strong> команды стек-машины (модуль <code>dis</code> позволяет изучить ассемблерные инструкции вроде <code>LOAD_FAST</code>, <code>BINARY_OP</code>).</li>\n                    <li><strong>Управление памятью:</strong> основной механизм — <em>подсчет ссылок (Reference Counting)</em>. Когда счетчик падает до 0, память освобождается мгновенно. Для циклических ссылок работает вспомогательный <em>Cyclic Garbage Collector</em> с тремя поколениями объектов (модуль <code>gc</code>).</li>\n                    <li><strong>GIL (Global Interpreter Lock):</strong> глобальная блокировка, гарантирующая, что в один момент времени байт-код Python выполняет только один поток ОС. В Python 3.13 представлен экспериментальный free-threaded режим без GIL (PEP 703).</li>\n                </ul>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl7-01",
+    "level": "7",
+    "module": "Уровень 7. Асинхронность и Конкурентность",
+    "title": "7.1. Многопоточность (threading) для I/O-bound",
+    "badge": "7.1 Threads",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>Потоки ОС (threading)</strong> отлично подходят для задач, ограниченных вводом-выводом (<strong>I/O-bound</strong>: сеть, базы данных, диск), так как при системном I/O CPython временно отпускает GIL.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    with ThreadPoolExecutor(max_workers=5) as pool:\n                        results = pool.map(fetch_url, urls)\n                </div>\n                <div class=\"p-2.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-200 text-xs\">\n                    <strong>Опасность:</strong> Несколько потоков разделяют общее адресное пространство. Без примитивов синхронизации (<code>threading.Lock</code>) одновременная запись в общую переменную приведет к состоянию гонки (<strong>Race Condition</strong>).\n                </div>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl7-02",
+    "level": "7",
+    "module": "Уровень 7. Асинхронность и Конкурентность",
+    "title": "7.2. Многопроцессность (multiprocessing) для CPU-bound",
+    "badge": "7.2 Process",
+    "difficulty": "Advanced",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Для тяжелых вычислительных задач (<strong>CPU-bound</strong>: машинное обучение, сжатие видео, шифрование) потоки не помогут из-за GIL. Решение — модуль <strong><code>multiprocessing</code></strong>.</p>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li>Каждый процесс запускает <em>отдельный экземпляр интерпретатора CPython</em> со своим собственным GIL и независимой памятью.</li>\n                    <li>Взаимодействие между процессами требует сериализации данных (IPC через <code>Queue</code> или <code>Pipe</code>).</li>\n                    <li>Высокоуровневый запуск: <code>concurrent.futures.ProcessPoolExecutor()</code>.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl7-03",
+    "level": "7",
+    "module": "Уровень 7. Асинхронность и Конкурентность",
+    "title": "7.3. Асинхронное программирование: asyncio и TaskGroup",
+    "badge": "7.3 Async",
+    "difficulty": "Advanced",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p><strong>asyncio</strong> — это кооперативная многозадачность на базе одного потока и цикла событий (<strong>Event Loop</strong>).</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    async def fetch(): ...\n                    async with asyncio.TaskGroup() as tg:\n                        task1 = tg.create_task(fetch())\n                        task2 = tg.create_task(fetch())\n                </div>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><code>async def</code> объявляет корутину (coroutine).</li>\n                    <li><code>await</code> передает управление обратно в Event Loop, пока операция ожидает завершения I/O.</li>\n                    <li>В Python 3.11+ стандартом конкурентного запуска стал <strong><code>asyncio.TaskGroup</code></strong>: если одна задача падает с ошибкой, остальные корректно отменяются автоматически (Structured Concurrency).</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl7-03-t1",
+        "title": "Запуск корутины через asyncio.run",
+        "desc": "Импортируйте <code>asyncio</code>. Объявите асинхронную функцию <code>async def greet(name: str) -> str</code>, которая внутри делает <code>await asyncio.sleep(0.01)</code> и возвращает <code>f'Hello, {name}!'</code>. Запустите её с помощью <code>asyncio.run(greet('Async'))</code> и выведите результат.",
+        "starter": "import asyncio\n\n# Напишите корутину greet и запустите через asyncio.run:\n",
+        "expected": "Hello, Async!",
+        "hint": "import asyncio\n\nasync def greet(name: str) -> str:\n    await asyncio.sleep(0.01)\n    return f'Hello, {name}!'\n\nprint(asyncio.run(greet('Async')))",
+        "xp": 35
+      }
+    ]
+  },
+  {
+    "id": "lvl8-01",
+    "level": "8",
+    "module": "Уровень 8. Тестирование и Качество",
+    "title": "8.1. Тестирование: Модуль pytest, фикстуры и параметризация",
+    "badge": "8.1 Pytest",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Стандартом тестирования в Python является фреймворк <strong>pytest</strong>. Он использует чистые инструкции <code>assert</code> без шаблонного кода.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    @pytest.fixture\n                    def test_db(): return Database(\":memory:\")\n\n                    @pytest.mark.parametrize(\"x, expected\", [(2, 4), (3, 9)])\n                    def test_square(x, expected): assert x**2 == expected\n                </div>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><strong>Фикстуры (Fixtures):</strong> подготавливают тестовое окружение и автоматически зачищают ресурсы (после <code>yield</code>).</li>\n                    <li><strong>Параметризация:</strong> позволяет запустить один и тот же тест на десятках различных наборов входных данных.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl8-01-t1",
+        "title": "Имитация параметризованного тестирования",
+        "desc": "Напишите функцию <code>is_even(n)</code>. Проверьте её для набора тестовых пар: <code>test_cases = [(2, True), (3, False), (0, True)]</code> с помощью цикла и инструкции <code>assert is_even(n) == expected</code>. Если все проверки прошли, выведите <code>'ALL TESTS PASSED'</code>.",
+        "starter": "# Напишите is_even, проверьте через assert и выведите 'ALL TESTS PASSED':\n",
+        "expected": "ALL TESTS PASSED",
+        "hint": "def is_even(n):\n    return n % 2 == 0\n\ntest_cases = [(2, True), (3, False), (0, True)]\nfor n, exp in test_cases:\n    assert is_even(n) == exp\n\nprint('ALL TESTS PASSED')",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl8-02",
+    "level": "8",
+    "module": "Уровень 8. Тестирование и Качество",
+    "title": "8.2. Конфигурация проектов: pyproject.toml и стандарты",
+    "badge": "8.2 Standards",
+    "difficulty": "Intro",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Файл <strong><code>pyproject.toml</code></strong> (PEP 518/621) заменил устаревшие <code>setup.py</code>, <code>setup.cfg</code>, <code>requirements.txt</code> и <code>tox.ini</code>, объединив конфигурацию всех инструментов в одном месте.</p>\n                <div class=\"p-3 rounded-lg bg-surface-subtle border border-border text-xs font-mono\">\n                    [project]\n                    name = \"my-service\"\n                    version = \"0.1.0\"\n                    dependencies = [\"fastapi>=0.110.0\"]\n\n                    [tool.ruff]\n                    line-length = 88\n                </div>\n                <p class=\"text-xs text-theme-muted\">В нем конфигурируются параметры сборщика (Hatch, Flit, Poetry), линтера (Ruff), анализатора типов (Mypy) и тестового раннера (Pytest).</p>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl9-01",
+    "level": "9",
+    "module": "Уровень 9. Специализации и Треки",
+    "title": "9.1. Трек A: Backend & Web API (FastAPI, SQLAlchemy, Redis)",
+    "badge": "9.1 Backend",
+    "difficulty": "Advanced",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Современный бэкенд на Python строится вокруг асинхронного стека:</p>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><strong>FastAPI</strong> — веб-фреймворк на базе Starlette с автоматической документацией Swagger/OpenAPI и валидацией через Pydantic v2.</li>\n                    <li><strong>SQLAlchemy 2.0</strong> — асинхронный ORM для взаимодействия с PostgreSQL, управление миграциями через Alembic.</li>\n                    <li><strong>Redis</strong> — in-memory хранилище для кэша ответов, сессий и очередей сообщений.</li>\n                    <li><strong>Celery / Dramatiq / Taskiq</strong> — распределенное выполнение фоновых задач.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl9-02",
+    "level": "9",
+    "module": "Уровень 9. Специализации и Треки",
+    "title": "9.2. Трек B: Data Engineering (Pandas, Polars, S3)",
+    "badge": "9.2 Data",
+    "difficulty": "Advanced",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Инженерия данных занимается сбором, очисткой и трансформацией больших объемов информации.</p>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><strong>Pandas</strong> — классический инструмент табличного анализа данных.</li>\n                    <li><strong>Polars</strong> — современный, сверхбыстрый табличный движок на языке Rust с многопоточной обработкой и ленивыми вычислениями (LazyFrame).</li>\n                    <li><strong>Apache Airflow / Prefect</strong> — оркестрация ETL/ELT пайплайнов по расписанию.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": [
+      {
+        "id": "lvl9-02-t1",
+        "title": "Имитация агрегации данных через словарь",
+        "desc": "Даны транзакции: <code>txs = [('apple', 10), ('banana', 20), ('apple', 15)]</code>. Напишите агрегацию сумм по категориям в словарь: <code>{'apple': 25, 'banana': 20}</code> и выведите его.",
+        "starter": "txs = [('apple', 10), ('banana', 20), ('apple', 15)]\n\n# Просуммируйте значения по категориям и выведите словарь:\n",
+        "expected": "{'apple': 25, 'banana': 20}",
+        "hint": "txs = [('apple', 10), ('banana', 20), ('apple', 15)]\nagg = {}\nfor cat, val in txs:\n    agg[cat] = agg.get(cat, 0) + val\nprint(agg)",
+        "xp": 25
+      }
+    ]
+  },
+  {
+    "id": "lvl9-03",
+    "level": "9",
+    "module": "Уровень 9. Специализации и Треки",
+    "title": "9.3. Трек C: Автоматизация и Web Scraping",
+    "badge": "9.3 Scraping",
+    "difficulty": "Medium",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Автоматизация и веб-скрапинг применяются для сбора рыночных цен, агрегации новостей и тестирования.</p>\n                <ul class=\"list-disc pl-5 space-y-1 text-xs text-theme-muted\">\n                    <li><strong>HTTP-клиенты:</strong> <code>httpx</code> (поддерживает HTTP/2 и асинхронный интерфейс), <code>aiohttp</code>.</li>\n                    <li><strong>Парсеры HTML:</strong> <code>BeautifulSoup4</code>, быстрый движок <code>lxml</code>.</li>\n                    <li><strong>Headless-браузеры:</strong> <code>Playwright</code> — автоматизация кликов, скриншотов и взаимодействия со сложными SPA-сайтами на JavaScript.</li>\n                </ul>\n            </div>\n        ",
+    "tasks": []
+  },
+  {
+    "id": "lvl9-04",
+    "level": "9",
+    "module": "Уровень 9. Специализации и Треки",
+    "title": "9.4. Практические проекты для портфолио разработчика",
+    "badge": "9.4 Portfolio",
+    "difficulty": "Advanced",
+    "theory": "\n            <div class=\"space-y-3\">\n                <p>Работодатели оценивают реальный код в репозиториях. Вот идеальная дорожная карта из 4 проектов:</p>\n                <ol class=\"list-decimal pl-5 space-y-2 text-xs text-theme-muted\">\n                    <li><strong>CLI Утилита (Уровень 1-4):</strong> Консольный менеджер финансов или трекер задач (<code>argparse</code>, SQLite, валидация, кастомные ошибки).</li>\n                    <li><strong>ООП-Библиотека (Уровень 5-6):</strong> Движок настольной/карточной игры или симулятор предметной области (датаклассы, протоколы, dunder-методы, 100% покрытие тестами).</li>\n                    <li><strong>Асинхронный сборщик данных (Уровень 7):</strong> Скрапер на <code>asyncio</code> + <code>httpx</code>, собирающий данные с 10+ источников конкурентно и сохраняющий в PostgreSQL.</li>\n                    <li><strong>Production-Ready REST API (Уровень 8-9):</strong> FastAPI + Pydantic v2 + SQLAlchemy 2.0 (async) + Alembic + Redis + Docker Compose, JWT-авторизация, фоновые воркеры, автотесты в GitHub Actions.</li>\n                </ol>\n            </div>\n        ",
+    "tasks": []
+  }
+];
+
+    // LEVEL OPTIONS METADATA FOR STYLIZED CUSTOM DROPDOWN
+    const LEVEL_OPTIONS = [
+      { val: "all", badge: "ALL", label: "Все уровни (0 — 9)", sub: "Полный курс из 43 разделов" },
+      { val: "0", badge: "0", label: "0. Инструменты и Окружение", sub: "REPL, IDE, venv, Git" },
+      { val: "1", badge: "1", label: "1. Базовый синтаксис и Типы", sub: "id(), типы, срезы, match/case" },
+      { val: "2", badge: "2", label: "2. Коллекции и Структуры", sub: "Списки, dict, set, collections" },
+      { val: "3", badge: "3", label: "3. Функции и ФП", sub: "*args, замыкания, декораторы" },
+      { val: "4", badge: "4", label: "4. Ошибки, Файлы и Библиотека", sub: "try/except, with, regex" },
+      { val: "5", badge: "5", label: "5. ООП и Архитектура", sub: "Классы, dunder, dataclasses" },
+      { val: "6", badge: "6", label: "6. Продвинутый CPython", sub: "yield from, types, дескрипторы" },
+      { val: "7", badge: "7", label: "7. Асинхронность и Конкурентность", sub: "asyncio, gather, потоки" },
+      { val: "8", badge: "8", label: "8. Тестирование и Качество", sub: "pytest, assert, pyproject.toml" },
+      { val: "9", badge: "9", label: "9. Специализации и Треки", sub: "FastAPI, Data, Scraping" }
+    ];
+
+    // SANDBOX PRESETS LIBRARY
+    const SANDBOX_PRESETS = {
+      asyncio: `# Асинхронный пайплайн на asyncio
+import asyncio
+import time
+
+async def worker(worker_id: int, delay: float):
+    print(f"-> Воркер #{worker_id} начал обработку задачи...")
+    await asyncio.sleep(delay)
+    print(f"<- Воркер #{worker_id} завершил работу за {delay}с")
+    return f"Результат_{worker_id}"
+
+async def main():
+    start = time.perf_counter()
+    print("🚀 Старт асинхронного пула задач...")
+    results = await asyncio.gather(
+        worker(1, 0.05),
+        worker(2, 0.08),
+        worker(3, 0.03)
+    )
+    elapsed = time.perf_counter() - start
+    print(f"✅ Все задачи выполнены за {elapsed:.3f}с: {results}")
+
+asyncio.run(main())
+`,
+      dataclass: `# Современное ООП: Датаклассы и валидация
+from dataclasses import dataclass, field
+
+@dataclass(frozen=True)
+class Product:
+    id: int
+    title: str
+    price: float
+    tags: tuple[str, ...] = field(default_factory=tuple)
+    
+    @property
+    def price_with_tax(self) -> float:
+        return round(self.price * 1.20, 2)
+
+products = [
+    Product(1, "Mechanical Keyboard", 120.0, ("hardware", "typing")),
+    Product(2, "4K Studio Monitor", 450.0, ("hardware", "screen")),
+    Product(3, "Python Mastery Book", 35.0, ("books", "education"))
+]
+
+print("=== Каталог товаров ===")
+for p in products:
+    print(f"[{p.id}] {p.title:<22} | Цена: \${p.price} (с НДС: \${p.price_with_tax})")
+`,
+      algorithms: `# Быстрая сортировка Хоара (Quicksort)
+def quicksort(arr: list[int]) -> list[int]:
+    if len(arr) <= 1:
+        return arr
+    pivot = arr[len(arr) // 2]
+    left = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right = [x for x in arr if x > pivot]
+    return quicksort(left) + middle + quicksort(right)
+
+sample_data = [64, 34, 25, 12, 22, 11, 90, 88, 45, 5]
+sorted_data = quicksort(sample_data)
+
+print(f"Исходный массив:        {sample_data}")
+print(f"Отсортированный массив: {sorted_data}")
+`,
+      regex: `# Регулярные выражения (модуль re)
+import re
+
+text = """
+Контакты:
+- Алексей: alex.dev@company.io, тел: +7-999-123-45-67
+- Мария: maria_qa@tech.org, тел: +7-900-555-88-99
+"""
+
+emails = re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', text)
+phones = re.findall(r'\+7-\d{3}-\d{3}-\d{2}-\d{2}', text)
+
+print("Найденные почтовые адреса:", emails)
+print("Найденные телефоны:", phones)
+`,
+      benchmark: `# Замер скорости: List Comprehension vs Цикл for
+import time
+
+ITERATIONS = 100_000
+
+t0 = time.perf_counter()
+res_for = []
+for i in range(ITERATIONS):
+    res_for.append(i * 2)
+t_for = time.perf_counter() - t0
+
+t1 = time.perf_counter()
+res_comp = [i * 2 for i in range(ITERATIONS)]
+t_comp = time.perf_counter() - t1
+
+speedup = (t_for / t_comp) if t_comp > 0 else 1.0
+print(f"Цикл for:            {t_for * 1000:.2f} ms")
+print(f"List Comprehension:   {t_comp * 1000:.2f} ms")
+print(f"Ускорение генератора: в {speedup:.2f}x быстрее!")
+`
+    };
+
+    // STATE
+    let currentLessonIndex = 0;
+    let currentTaskIndex = 0;
+    let isSandboxMode = false;
+    let isTerminalCompact = false;
+    let activeLevelFilter = "all";
+    let pyodideInstance = null;
+    let userXp = 0;
+    let completedTasks = new Set();
+    let completedLessons = new Set();
+    let currentMobileTab = "theory"; // 'lessons' | 'theory' | 'editor'
+
+    // STORAGE KEYS
+    const STORAGE_KEY_XP = "pythoncraft_xp_v5";
+    const STORAGE_KEY_COMPLETED_TASKS = "pythoncraft_tasks_v5";
+    const STORAGE_KEY_COMPLETED_LESSONS = "pythoncraft_lessons_v5";
+    const STORAGE_KEY_CODE_PREFIX = "pythoncraft_code_v5_";
+
+    // INIT
+    window.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      loadState();
+      renderCustomDropdown();
+      renderCurriculum();
+      switchLesson(0, 0);
+      setupEditorListeners();
+      initPyodideEngine();
+      updateResponsiveLayout();
+    });
+
+    window.addEventListener("resize", () => {
+      updateResponsiveLayout();
+    });
+
+    // 1. STATE & STORAGE
+    function loadState() {
+      const savedXp = localStorage.getItem(STORAGE_KEY_XP);
+      if (savedXp) userXp = parseInt(savedXp, 10) || 0;
+      updateXpDisplay();
+
+      const savedCompletedTasks = localStorage.getItem(STORAGE_KEY_COMPLETED_TASKS);
+      if (savedCompletedTasks) {
+        try { completedTasks = new Set(JSON.parse(savedCompletedTasks)); } catch (e) { completedTasks = new Set(); }
+      }
+
+      const savedCompletedLessons = localStorage.getItem(STORAGE_KEY_COMPLETED_LESSONS);
+      if (savedCompletedLessons) {
+        try { completedLessons = new Set(JSON.parse(savedCompletedLessons)); } catch (e) { completedLessons = new Set(); }
+      }
+
+      updateProgress();
+    }
+
+    function addXp(amount) {
+      userXp += amount;
+      localStorage.setItem(STORAGE_KEY_XP, userXp);
+      updateXpDisplay();
+    }
+
+    function updateXpDisplay() {
+      document.getElementById("userXp").innerText = userXp;
+    }
+
+    function markTaskComplete(taskId, xpAmount = 15) {
+      if (!completedTasks.has(taskId)) {
+        completedTasks.add(taskId);
+        localStorage.setItem(STORAGE_KEY_COMPLETED_TASKS, JSON.stringify(Array.from(completedTasks)));
+        addXp(xpAmount);
+        triggerConfetti();
+
+        // Check if all tasks in current lesson are done
+        const lesson = PLAN_DATABASE[currentLessonIndex];
+        if (lesson.tasks.every(t => completedTasks.has(t.id))) {
+          completedLessons.add(lesson.id);
+          localStorage.setItem(STORAGE_KEY_COMPLETED_LESSONS, JSON.stringify(Array.from(completedLessons)));
+        }
+
+        renderCurriculum();
+        renderTaskPills();
+        updateProgress();
+      }
+    }
+
+    function markCurrentTheoryLessonRead() {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      if (!completedLessons.has(lesson.id)) {
+        completedLessons.add(lesson.id);
+        localStorage.setItem(STORAGE_KEY_COMPLETED_LESSONS, JSON.stringify(Array.from(completedLessons)));
+        addXp(10);
+        triggerConfetti();
+        updateTheoryOnlyButtonState();
+        renderCurriculum();
+        updateProgress();
+      }
+    }
+
+    function updateTheoryOnlyButtonState() {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      const isDone = completedLessons.has(lesson.id);
+      const btn = document.getElementById("markReadBtn");
+      const text = document.getElementById("markReadBtnText");
+
+      if (isDone) {
+        btn.classList.remove("bg-theme-emeraldMuted", "text-theme-emerald");
+        btn.classList.add("bg-surface-subtle", "text-theme-muted", "border-border");
+        text.innerText = "Изучено (✓ Пройдено)";
+      } else {
+        btn.classList.add("bg-theme-emeraldMuted", "text-theme-emerald");
+        btn.classList.remove("bg-surface-subtle", "text-theme-muted", "border-border");
+        text.innerText = "Отметить как изученное (+10 XP)";
+      }
+    }
+
+    function updateProgress() {
+      const totalLessons = PLAN_DATABASE.length;
+      const count = completedLessons.size;
+      const pct = totalLessons > 0 ? Math.round((count / totalLessons) * 100) : 0;
+      document.getElementById("progressPercent").innerText = `${pct}%`;
+      document.getElementById("lessonsCountBadge").innerText = `${count}/${totalLessons}`;
+    }
+
+    function resetAllProgress() {
+      if (confirm("Вы уверены, что хотите сбросить весь прогресс и сохранённый код?")) {
+        localStorage.clear();
+        userXp = 0;
+        completedTasks.clear();
+        completedLessons.clear();
+        updateXpDisplay();
+        updateProgress();
+        renderCurriculum();
+        switchLesson(0, 0);
+        appendTerminalOutput("Прогресс успешно сброшен.", "text-theme-muted");
+      }
+    }
+
+    // 2. STYLIZED ANIMATED CUSTOM DROPDOWN CONTROLLER
+    function renderCustomDropdown() {
+      const menu = document.getElementById("levelDropdownMenu");
+      menu.innerHTML = "";
+
+      LEVEL_OPTIONS.forEach(opt => {
+        const isSelected = activeLevelFilter === opt.val;
+        const item = document.createElement("button");
+        item.type = "button";
+        item.onclick = (e) => {
+          e.stopPropagation();
+          selectLevelFilter(opt.val);
+        };
+        item.className = `btn-tactile w-full text-left p-2.5 rounded-xl flex items-center justify-between text-xs transition-all ${
+          isSelected
+            ? "bg-theme-emeraldMuted text-white border border-theme-emerald/30 font-semibold"
+            : "text-theme-muted hover:text-white hover:bg-surface-hover"
+        }`;
+
+        item.innerHTML = `
+          <div class="flex items-center gap-2.5 truncate">
+            <span class="w-6 h-5 rounded-md flex items-center justify-center font-mono text-[10px] shrink-0 ${
+              isSelected 
+                ? "bg-theme-emerald text-canvas font-bold" 
+                : "bg-surface-subtle text-theme-muted border border-border"
+            }">${opt.badge}</span>
+            <div class="truncate">
+              <div class="truncate ${isSelected ? 'text-white' : 'text-theme-text'}">${opt.label}</div>
+              <div class="text-[10px] text-theme-faint font-normal truncate">${opt.sub}</div>
+            </div>
+          </div>
+          ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5 text-theme-emerald shrink-0"></i>' : ''}
+        `;
+        menu.appendChild(item);
+      });
+      lucide.createIcons();
+    }
+
+    function toggleLevelDropdown(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById("levelDropdownMenu");
+      const chevron = document.getElementById("levelDropdownChevron");
+      const isHidden = menu.classList.contains("hidden");
+
+      if (isHidden) {
+        menu.classList.remove("hidden", "dropdown-popover-exit");
+        menu.classList.add("dropdown-popover-enter");
+        chevron.style.transform = "rotate(180deg)";
+      } else {
+        closeLevelDropdown();
+      }
+    }
+
+    function closeLevelDropdown() {
+      const menu = document.getElementById("levelDropdownMenu");
+      const chevron = document.getElementById("levelDropdownChevron");
+      if (!menu || menu.classList.contains("hidden")) return;
+
+      menu.classList.remove("dropdown-popover-enter");
+      menu.classList.add("dropdown-popover-exit");
+      chevron.style.transform = "rotate(0deg)";
+      setTimeout(() => {
+        menu.classList.add("hidden");
+        menu.classList.remove("dropdown-popover-exit");
+      }, 150);
+    }
+
+    function selectLevelFilter(val) {
+      activeLevelFilter = val;
+      const opt = LEVEL_OPTIONS.find(o => o.val === val);
+      if (opt) {
+        document.getElementById("levelDropdownBadge").innerText = opt.badge;
+        document.getElementById("levelDropdownText").innerText = opt.label;
+      }
+      closeLevelDropdown();
+      renderCustomDropdown();
+      renderCurriculum();
+    }
+
+    // Close when clicking outside dropdown
+    document.addEventListener("click", (e) => {
+      const dropdown = document.getElementById("customLevelDropdown");
+      if (dropdown && !dropdown.contains(e.target)) {
+        closeLevelDropdown();
+      }
+    });
+
+    // 3. CURRICULUM ACCORDION RENDERING
+    function renderCurriculum() {
+      const container = document.getElementById("modulesContainer");
+      container.innerHTML = "";
+
+      const filtered = PLAN_DATABASE.filter(l => activeLevelFilter === "all" || l.level === activeLevelFilter);
+
+      const groups = {};
+      filtered.forEach((lesson) => {
+        const fullIndex = PLAN_DATABASE.findIndex(x => x.id === lesson.id);
+        if (!groups[lesson.module]) groups[lesson.module] = [];
+        groups[lesson.module].push({ ...lesson, fullIndex });
+      });
+
+      for (const [modName, lessons] of Object.entries(groups)) {
+        const card = document.createElement("div");
+        card.className = "rounded-xl bg-surface-subtle/80 border border-border overflow-hidden transition-all";
+
+        const header = document.createElement("div");
+        header.className = "px-3 py-2 bg-surface border-b border-border text-[11px] font-bold text-theme-muted uppercase tracking-wider flex items-center justify-between";
+        header.innerHTML = `
+          <span class="truncate pr-2">${modName}</span>
+          <span class="font-mono text-[10px] text-theme-emerald px-1.5 py-0.2 rounded bg-surface-subtle border border-border">${lessons.length}</span>
+        `;
+        card.appendChild(header);
+
+        const list = document.createElement("div");
+        list.className = "p-1 space-y-0.5";
+
+        lessons.forEach(item => {
+          const isCurrent = !isSandboxMode && item.fullIndex === currentLessonIndex;
+          const isLessonDone = completedLessons.has(item.id);
+          const hasCodingTasks = item.tasks && item.tasks.length > 0;
+
+          const btn = document.createElement("button");
+          btn.onclick = () => switchLesson(item.fullIndex, 0);
+          btn.className = `btn-tactile w-full text-left px-2.5 py-2.5 rounded-lg text-xs flex items-center justify-between transition-all ${
+            isCurrent
+              ? "bg-theme-emeraldMuted text-white font-semibold border border-theme-emerald/40"
+              : "text-theme-muted hover:text-white hover:bg-surface-hover"
+          }`;
+
+          btn.innerHTML = `
+            <div class="flex items-center gap-2 truncate">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0 ${isLessonDone ? 'bg-theme-emerald' : (isCurrent ? 'bg-theme-amber' : 'bg-border')}"></span>
+              <span class="truncate">${item.title}</span>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              ${!hasCodingTasks ? '<span class="text-[9px] uppercase font-mono px-1 py-0.2 rounded bg-surface text-theme-muted border border-border">Теория</span>' : ''}
+              ${isLessonDone ? '<i data-lucide="check" class="w-3.5 h-3.5 text-theme-emerald"></i>' : ''}
+            </div>
+          `;
+          list.appendChild(btn);
+        });
+
+        card.appendChild(list);
+        container.appendChild(card);
+      }
+      lucide.createIcons();
+    }
+
+    // 4. LESSON & TASK SWITCHING
+    function switchLesson(lessonIdx, taskIdx = 0) {
+      if (lessonIdx < 0 || lessonIdx >= PLAN_DATABASE.length) return;
+      if (isSandboxMode) {
+        exitSandboxMode(lessonIdx);
+        return;
+      }
+
+      currentLessonIndex = lessonIdx;
+      currentTaskIndex = taskIdx;
+      const lesson = PLAN_DATABASE[lessonIdx];
+
+      // Update Nav & Theory Header
+      document.getElementById("navModuleTitle").innerText = lesson.module;
+      document.getElementById("navLessonTitle").innerText = lesson.title;
+      document.getElementById("lessonBadge").innerText = lesson.badge;
+      document.getElementById("lessonDifficulty").innerText = lesson.difficulty;
+      document.getElementById("lessonTitle").innerText = lesson.title;
+      document.getElementById("theoryBody").innerHTML = lesson.theory;
+
+      const hasTasks = lesson.tasks && lesson.tasks.length > 0;
+      const codingSection = document.getElementById("codingTasksSection");
+      const theoryOnlySection = document.getElementById("theoryOnlySection");
+      const hintBtn = document.getElementById("hintBtn");
+
+      if (hasTasks) {
+        codingSection.classList.remove("hidden");
+        theoryOnlySection.classList.add("hidden");
+        hintBtn.classList.remove("hidden");
+
+        renderTaskPills();
+        loadCurrentTaskData();
+      } else {
+        codingSection.classList.add("hidden");
+        theoryOnlySection.classList.remove("hidden");
+        hintBtn.classList.add("hidden");
+
+        updateTheoryOnlyButtonState();
+        loadTheoryOnlyEditor();
+      }
+
+      updateNextActionBtn();
+      renderCurriculum();
+
+      // On mobile viewports, automatically jump to Theory panel when picking a lesson
+      if (window.innerWidth < 1024) {
+        currentMobileTab = "theory";
+        updateResponsiveLayout();
+      }
+    }
+
+    function renderTaskPills() {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      const container = document.getElementById("tasksPillsContainer");
+      container.innerHTML = "";
+
+      lesson.tasks.forEach((t, idx) => {
+        const isCurrent = idx === currentTaskIndex;
+        const isDone = completedTasks.has(t.id);
+
+        const btn = document.createElement("button");
+        btn.onclick = () => switchTask(idx);
+        btn.className = `btn-tactile text-xs px-2.5 py-1.5 rounded-md font-mono transition-all flex items-center gap-1 ${
+          isCurrent
+            ? "bg-theme-emerald text-canvas font-bold glow-emerald"
+            : (isDone
+                ? "bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/30 font-medium"
+                : "bg-surface border border-border text-theme-muted hover:text-white")
+        }`;
+
+        btn.innerHTML = `
+          <span>Задача ${idx + 1}</span>
+          ${isDone ? '<i data-lucide="check" class="w-3 h-3 text-theme-emerald"></i>' : ''}
+        `;
+        container.appendChild(btn);
+      });
+      lucide.createIcons();
+    }
+
+    function switchTask(taskIdx) {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      if (taskIdx < 0 || taskIdx >= lesson.tasks.length) return;
+      currentTaskIndex = taskIdx;
+      renderTaskPills();
+      loadCurrentTaskData();
+    }
+
+    function loadCurrentTaskData() {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      const task = lesson.tasks[currentTaskIndex];
+
+      document.getElementById("currentTaskTitle").innerText = task.title;
+      document.getElementById("currentTaskIndexLabel").innerText = `${currentTaskIndex + 1} из ${lesson.tasks.length}`;
+      document.getElementById("taskDescription").innerHTML = task.desc;
+      document.getElementById("expectedOutputDisplay").innerText = task.expected;
+      document.getElementById("taskXpBadge").innerText = `+${task.xp || 15} XP`;
+      document.getElementById("editorFileName").innerText = `${task.id}.py`;
+
+      // Status badge reset
+      const badge = document.getElementById("taskStatusBadge");
+      badge.className = "hidden";
+      badge.innerHTML = "";
+
+      // Load saved user code or clean starter template (NEVER pre-filled solutions)
+      const savedCode = localStorage.getItem(STORAGE_KEY_CODE_PREFIX + task.id);
+      const codeEditor = document.getElementById("codeEditor");
+      codeEditor.value = savedCode !== null ? savedCode : task.starter;
+      updateLineNumbers();
+
+      updateNextActionBtn();
+    }
+
+    function loadTheoryOnlyEditor() {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      document.getElementById("editorFileName").innerText = `${lesson.id}_demo.py`;
+
+      const savedCode = localStorage.getItem(STORAGE_KEY_CODE_PREFIX + lesson.id);
+      const codeEditor = document.getElementById("codeEditor");
+      codeEditor.value = savedCode !== null ? savedCode : `# ${lesson.title}\n# Этот раздел посвящён концептуальной и архитектурной теории.\n# Ознакомьтесь с теоретическим материалом в колонке слева.\n# Вы можете использовать это поле как интерактивную песочницу.\n\nprint("Изучен модуль: ${lesson.title}")\n`;
+      updateLineNumbers();
+    }
+
+    function updateNextActionBtn() {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      const hasTasks = lesson.tasks && lesson.tasks.length > 0;
+      const hasNextTask = hasTasks && currentTaskIndex < lesson.tasks.length - 1;
+      const nextBtnText = document.getElementById("nextActionText");
+
+      if (hasNextTask) {
+        nextBtnText.innerText = `К задаче ${currentTaskIndex + 2}`;
+      } else {
+        nextBtnText.innerText = "Следующий урок";
+      }
+    }
+
+    function advanceNextTaskOrLesson() {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      const hasTasks = lesson.tasks && lesson.tasks.length > 0;
+
+      if (hasTasks && currentTaskIndex < lesson.tasks.length - 1) {
+        switchTask(currentTaskIndex + 1);
+      } else {
+        if (currentLessonIndex < PLAN_DATABASE.length - 1) {
+          switchLesson(currentLessonIndex + 1, 0);
+        } else {
+          alert("🎉 Поздравляем! Вы прошли всю программу курса PythonCraft! Закрепляйте навыки в режиме «Песочница».");
+        }
+      }
+    }
+
+    function insertSolutionHint() {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      if (!lesson.tasks || lesson.tasks.length === 0) return;
+      const task = lesson.tasks[currentTaskIndex];
+      const editor = document.getElementById("codeEditor");
+      editor.value = task.hint;
+      updateLineNumbers();
+      appendTerminalOutput(`💡 Готовое решение подставлено в редактор для [Задача ${currentTaskIndex + 1}].`, "text-theme-amber");
+    }
+
+    function resetEditorCode() {
+      if (isSandboxMode) {
+        document.getElementById("codeEditor").value = "# Свободная песочница Python 3.12\nprint(\"Hello, PythonCraft!\")\n";
+      } else {
+        const lesson = PLAN_DATABASE[currentLessonIndex];
+        if (lesson.tasks && lesson.tasks.length > 0) {
+          const task = lesson.tasks[currentTaskIndex];
+          document.getElementById("codeEditor").value = task.starter;
+        } else {
+          loadTheoryOnlyEditor();
+        }
+      }
+      updateLineNumbers();
+    }
+
+    function copyEditorCode() {
+      const code = document.getElementById("codeEditor").value;
+      navigator.clipboard.writeText(code).then(() => {
+        appendTerminalOutput("📋 Код скопирован в буфер обмена.", "text-theme-emerald");
+      });
+    }
+
+    // 5. TERMINAL PROPORTIONS TOGGLE (6:4 vs 8:2)
+    function toggleTerminalCompact() {
+      const editorBox = document.getElementById("editorWorkspaceContainer");
+      const terminalBox = document.getElementById("terminalContainer");
+      const btn = document.getElementById("terminalToggleBtn");
+
+      isTerminalCompact = !isTerminalCompact;
+      if (isTerminalCompact) {
+        editorBox.classList.remove("flex-[6]");
+        editorBox.classList.add("flex-[8]");
+        terminalBox.classList.remove("flex-[4]");
+        terminalBox.classList.add("flex-[2]");
+        btn.innerText = "↕ 8:2";
+      } else {
+        editorBox.classList.remove("flex-[8]");
+        editorBox.classList.add("flex-[6]");
+        terminalBox.classList.remove("flex-[2]");
+        terminalBox.classList.add("flex-[4]");
+        btn.innerText = "↕ 6:4";
+      }
+    }
+
+    // 6. SANDBOX MODE (MAXIMIZED HUMAN-FRIENDLY WORKSPACE)
+    function toggleSandboxMode() {
+      if (isSandboxMode) {
+        exitSandboxMode();
+      } else {
+        enterSandboxMode();
+      }
+    }
+
+    function enterSandboxMode() {
+      isSandboxMode = true;
+
+      document.getElementById("sandboxCustomBar").classList.remove("hidden");
+      document.getElementById("sandboxBtnText").innerText = "Выйти";
+      document.getElementById("sandboxBtn").classList.add("bg-theme-emeraldMuted", "border-theme-emerald/50", "text-theme-emerald");
+
+      document.getElementById("editorFileName").innerText = "sandbox_main.py";
+      document.getElementById("headerBreadcrumb").classList.add("hidden");
+
+      const saved = localStorage.getItem("pythoncraft_sandbox_code_v5");
+      const editor = document.getElementById("codeEditor");
+      editor.value = saved || SANDBOX_PRESETS.asyncio;
+      updateLineNumbers();
+
+      appendTerminalOutput("✨ Режим Песочницы развернут на весь экран. Выберите шаблон или введите код.", "text-theme-emerald");
+      updateResponsiveLayout();
+    }
+
+    function exitSandboxMode(targetLessonIdx = null) {
+      isSandboxMode = false;
+
+      document.getElementById("sandboxCustomBar").classList.add("hidden");
+      document.getElementById("headerBreadcrumb").classList.remove("hidden");
+
+      document.getElementById("sandboxBtnText").innerText = "Песочница";
+      document.getElementById("sandboxBtn").classList.remove("bg-theme-emeraldMuted", "border-theme-emerald/50", "text-theme-emerald");
+
+      if (targetLessonIdx !== null) {
+        switchLesson(targetLessonIdx, 0);
+      } else {
+        switchLesson(currentLessonIndex, currentTaskIndex);
+      }
+      updateResponsiveLayout();
+    }
+
+    function loadSandboxPreset(presetName) {
+      if (SANDBOX_PRESETS[presetName]) {
+        const editor = document.getElementById("codeEditor");
+        editor.value = SANDBOX_PRESETS[presetName];
+        updateLineNumbers();
+        localStorage.setItem("pythoncraft_sandbox_code_v5", editor.value);
+        appendTerminalOutput(`📦 Шаблон «${presetName}» загружен в песочницу.`, "text-theme-amber");
+      }
+    }
+
+    // 7. EDITOR TYPING & HOTKEYS
+    function setupEditorListeners() {
+      const editor = document.getElementById("codeEditor");
+
+      editor.addEventListener("input", () => {
+        updateLineNumbers();
+        if (isSandboxMode) {
+          localStorage.setItem("pythoncraft_sandbox_code_v5", editor.value);
+        } else {
+          const lesson = PLAN_DATABASE[currentLessonIndex];
+          if (lesson.tasks && lesson.tasks.length > 0) {
+            const task = lesson.tasks[currentTaskIndex];
+            localStorage.setItem(STORAGE_KEY_CODE_PREFIX + task.id, editor.value);
+          } else {
+            localStorage.setItem(STORAGE_KEY_CODE_PREFIX + lesson.id, editor.value);
+          }
+        }
+      });
+
+      editor.addEventListener("keydown", (e) => {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          const start = editor.selectionStart;
+          const end = editor.selectionEnd;
+          editor.value = editor.value.substring(0, start) + "    " + editor.value.substring(end);
+          editor.selectionStart = editor.selectionEnd = start + 4;
+          updateLineNumbers();
+        } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          runPythonCode();
+        }
+      });
+
+      editor.addEventListener("scroll", () => {
+        document.getElementById("lineNumbers").scrollTop = editor.scrollTop;
+      });
+    }
+
+    // Quick mobile snippet insertion
+    function insertCodeSnippet(text, cursorOffset = null) {
+      const editor = document.getElementById("codeEditor");
+      editor.focus();
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const before = editor.value.substring(0, start);
+      const after = editor.value.substring(end);
+      editor.value = before + text + after;
+      const newPos = cursorOffset !== null ? start + cursorOffset : start + text.length;
+      editor.selectionStart = editor.selectionEnd = newPos;
+      updateLineNumbers();
+      editor.dispatchEvent(new Event("input"));
+    }
+
+    function updateLineNumbers() {
+      const editor = document.getElementById("codeEditor");
+      const lines = editor.value.split("\n").length;
+      const lineNumbersEl = document.getElementById("lineNumbers");
+      let nums = "";
+      for (let i = 1; i <= Math.max(lines, 1); i++) {
+        nums += i + "<br>";
+      }
+      lineNumbersEl.innerHTML = nums;
+    }
+
+    // 8. PYODIDE WASM PYTHON ENGINE
+    async function initPyodideEngine() {
+      const engineText = document.getElementById("engineText");
+      const engineDot = document.getElementById("engineDot");
+
+      try {
+        if (engineText) engineText.innerText = "Загрузка Python 3.12...";
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+        script.onload = async () => {
+          try {
+            pyodideInstance = await loadPyodide({
+              indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/"
+            });
+            if (engineDot) engineDot.className = "w-2 h-2 rounded-full bg-theme-emerald";
+            if (engineText) engineText.innerText = "Python 3.12 (Готов)";
+            appendTerminalOutput("⚡ Движок CPython 3.12 (Pyodide WebAssembly) успешно инициализирован!", "text-theme-emerald");
+          } catch (err) {
+            fallbackEngine(err);
+          }
+        };
+        script.onerror = (err) => fallbackEngine(err);
+        document.head.appendChild(script);
+      } catch (err) {
+        fallbackEngine(err);
+      }
+    }
+
+    function fallbackEngine(err) {
+      const engineDot = document.getElementById("engineDot");
+      const engineText = document.getElementById("engineText");
+      if (engineDot) engineDot.className = "w-2 h-2 rounded-full bg-theme-amber";
+      if (engineText) engineText.innerText = "Эмулятор синтаксиса";
+      console.warn("Pyodide fallback active:", err);
+    }
+
+    // 9. CODE EXECUTION & TEST VALIDATION
+    async function runPythonCode() {
+      const code = document.getElementById("codeEditor").value;
+      const runBtn = document.getElementById("runBtn");
+      const timeBadge = document.getElementById("runTimeBadge");
+      const statusBadge = document.getElementById("taskStatusBadge");
+
+      clearTerminal();
+      appendTerminalOutput(`$ python ${document.getElementById("editorFileName").innerText}`, "text-theme-faint");
+
+      const startTime = performance.now();
+      let stdout = "";
+      let isError = false;
+
+      runBtn.disabled = true;
+      runBtn.classList.add("opacity-50");
+
+      try {
+        if (pyodideInstance) {
+          pyodideInstance.setStdout({
+            batched: (msg) => {
+              stdout += msg + "\n";
+              appendTerminalOutput(msg, "text-theme-text");
+            }
+          });
+          pyodideInstance.setStderr({
+            batched: (msg) => {
+              isError = true;
+              stdout += msg + "\n";
+              appendTerminalOutput(msg, "text-theme-coral");
+            }
+          });
+
+          await pyodideInstance.runPythonAsync(code);
+        } else {
+          stdout = simulateBasicPython(code);
+          appendTerminalOutput(stdout, "text-theme-text");
+        }
+      } catch (err) {
+        isError = true;
+        appendTerminalOutput(err.message || String(err), "text-theme-coral");
+      } finally {
+        const elapsed = Math.round(performance.now() - startTime);
+        timeBadge.innerText = `${elapsed}ms`;
+        timeBadge.classList.remove("hidden");
+        runBtn.disabled = false;
+        runBtn.classList.remove("opacity-50");
+
+        const lesson = PLAN_DATABASE[currentLessonIndex];
+        if (!isSandboxMode && !isError && lesson.tasks && lesson.tasks.length > 0) {
+          validateTaskResult(stdout.trim());
+        }
+
+        // On mobile, ensure terminal output is scrolled smoothly into view
+        const term = document.getElementById("terminalOutput");
+        if (term) term.scrollTop = term.scrollHeight;
+      }
+    }
+
+    function validateTaskResult(output) {
+      const lesson = PLAN_DATABASE[currentLessonIndex];
+      const task = lesson.tasks[currentTaskIndex];
+      const expected = task.expected.trim();
+      const statusBadge = document.getElementById("taskStatusBadge");
+
+      const cleanOutput = output.replace(/\r\n/g, "\n").trim();
+      const cleanExpected = expected.replace(/\r\n/g, "\n").trim();
+
+      if (cleanOutput === cleanExpected) {
+        statusBadge.className = "flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 rounded-full bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/30 text-[11px] font-semibold";
+        statusBadge.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> <span>Верно! Задача ${currentTaskIndex + 1} (+${task.xp || 15} XP)</span>`;
+        markTaskComplete(task.id, task.xp || 15);
+      } else {
+        statusBadge.className = "flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 rounded-full bg-theme-coralMuted text-theme-coral border border-theme-coral/30 text-[11px]";
+        statusBadge.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> <span>Вывод не совпал</span>`;
+      }
+      lucide.createIcons();
+    }
+
+    function simulateBasicPython(code) {
+      let output = "";
+      const lines = code.split("\n");
+      for (const line of lines) {
+        const trimmed = line.trim();
+        const match = trimmed.match(/^print\((.*)\)$/);
+        if (match) {
+          let inner = match[1].trim();
+          if ((inner.startsWith('"') && inner.endsWith('"')) || (inner.startsWith("'") && inner.endsWith("'"))) {
+            output += inner.slice(1, -1) + "\n";
+          } else {
+            output += inner + "\n";
+          }
+        }
+      }
+      return output || "Выполнено.";
+    }
+
+    // 10. TERMINAL UTILITIES
+    function appendTerminalOutput(text, colorClass = "text-theme-text") {
+      const term = document.getElementById("terminalOutput");
+      const line = document.createElement("div");
+      line.className = `${colorClass} whitespace-pre-wrap leading-relaxed`;
+      line.textContent = text;
+      term.appendChild(line);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    function clearTerminal() {
+      document.getElementById("terminalOutput").innerHTML = "";
+    }
+
+    // 11. ADAPTIVE RESPONSIVE LAYOUT & MOBILE NAVIGATION TABS
+    function updateResponsiveLayout() {
+      const isMobile = window.innerWidth < 1024;
+      const lessonsSidebar = document.getElementById("lessonsSidebar");
+      const theoryPanel = document.getElementById("theoryPanel");
+      const editorPanel = document.getElementById("editorPanel");
+      const mobileTabBar = document.getElementById("mobileTabBar");
+
+      if (isSandboxMode) {
+        lessonsSidebar.classList.add("hidden");
+        theoryPanel.classList.add("hidden");
+        mobileTabBar.classList.add("hidden");
+        editorPanel.classList.remove("hidden");
+        return;
+      }
+
+      if (!isMobile) {
+        // Desktop (>= 1024px): show all 3 independent columns side by side
+        mobileTabBar.classList.add("hidden");
+        lessonsSidebar.classList.remove("hidden");
+        theoryPanel.classList.remove("hidden");
+        editorPanel.classList.remove("hidden");
+      } else {
+        // Mobile & Tablet (< 1024px): show mobile navigation bar and exactly one active column
+        mobileTabBar.classList.remove("hidden");
+        lessonsSidebar.classList.toggle("hidden", currentMobileTab !== "lessons");
+        theoryPanel.classList.toggle("hidden", currentMobileTab !== "theory");
+        editorPanel.classList.toggle("hidden", currentMobileTab !== "editor");
+
+        // Update tab button active indicators
+        const tabBtns = {
+          lessons: document.getElementById("tabBtnLessons"),
+          theory: document.getElementById("tabBtnTheory"),
+          editor: document.getElementById("tabBtnEditor")
+        };
+
+        for (const [key, btn] of Object.entries(tabBtns)) {
+          if (!btn) continue;
+          if (key === currentMobileTab) {
+            btn.className = "flex-1 py-3 text-center text-theme-emerald border-b-2 border-theme-emerald font-semibold transition-all flex items-center justify-center gap-1.5";
+          } else {
+            btn.className = "flex-1 py-3 text-center text-theme-muted hover:text-theme-text border-b-2 border-transparent font-medium transition-all flex items-center justify-center gap-1.5";
+          }
+        }
+      }
+    }
+
+    function switchMobileTab(tab) {
+      currentMobileTab = tab;
+      updateResponsiveLayout();
+    }
+
+    // 12. CELEBRATION EFFECTS
+    function triggerConfetti() {
+      if (typeof confetti === "function") {
+        confetti({
+          particleCount: 55,
+          spread: 65,
+          origin: { y: 0.8 },
+          colors: ['#52B788', '#E5A962', '#A78BFA', '#E78274']
+        });
+      }
+    }
+  </script>
+</body>
+</html>
