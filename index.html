@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="description" content="PythonCraft — Интерактивная веб-платформа обучения Python от базового синтаксиса до Senior-архитектуры и алгоритмов.">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <title>PythonCraft — Интерактивный тренажёр Python (Zero to Senior)</title>
   
   <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
@@ -109,12 +111,24 @@
       background: #363C4C;
     }
 
-    /* Code editor typography & tab sizing */
+    /* Code editor typography & pixel-perfect line numbers alignment */
     .editor-container {
       position: relative;
       font-family: 'JetBrains Mono', monospace;
       font-size: 14px;
-      line-height: 1.65;
+      line-height: 24px;
+    }
+    .line-number-gutter {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      line-height: 24px;
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+    .line-num-item {
+      display: block;
+      height: 24px;
+      line-height: 24px;
     }
     .code-textarea {
       tab-size: 4;
@@ -122,16 +136,29 @@
       resize: none;
       outline: none;
       font-family: inherit;
-      line-height: inherit;
+      font-size: 14px;
+      line-height: 24px;
+      padding-top: 14px;
+      padding-bottom: 14px;
     }
 
-    /* On iOS, textareas with font-size < 16px cause auto-zoom. Force 16px on mobile viewports */
+    /* On iOS & mobile, textareas with font-size < 16px cause auto-zoom. Synchronize 16px & 26px line-height */
     @media (max-width: 768px) {
-      .code-textarea {
-        font-size: 16px !important;
-      }
       .editor-container {
         font-size: 16px !important;
+        line-height: 26px !important;
+      }
+      .line-number-gutter {
+        font-size: 16px !important;
+        line-height: 26px !important;
+      }
+      .line-num-item {
+        height: 26px !important;
+        line-height: 26px !important;
+      }
+      .code-textarea {
+        font-size: 16px !important;
+        line-height: 26px !important;
       }
     }
 
@@ -211,7 +238,7 @@
   <header class="h-14 shrink-0 border-b border-border bg-surface/90 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between sticky top-0 z-40">
     <div class="flex items-center gap-2 sm:gap-3.5 min-w-0">
       <!-- Logo -->
-      <div class="flex items-center gap-2 cursor-pointer btn-tactile shrink-0" onclick="exitSandboxMode(0)">
+      <div class="flex items-center gap-2 cursor-pointer btn-tactile shrink-0" onclick="switchNavMode('course')">
         <div class="w-8 h-8 rounded-lg bg-surface-subtle border border-border flex items-center justify-center text-theme-emerald">
           <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
             <path d="M12 2c-4.4 0-4 1.9-4 1.9v2h4v.7H6s-4-.4-4 4.3 3.5 4.1 3.5 4.1h2.1v-2.1c0-2.4 2-2.3 2-2.3h4c1.9 0 2-1.9 2-1.9V4s.5-2-3.6-2zm-2.4 1.9c.5 0 .9.4.9.9 0 .5-.4.9-.9.9s-.9-.4-.9-.9c0-.5.4-.9.9-.9zM12 22c4.4 0 4-1.9 4-1.9v-2h-4v-.7h6s4 .4 4-4.3-3.5-4.1-3.5-4.1h-2.1v2.1c0 2.4-2 2.3-2 2.3h-4c-1.9 0-2 1.9-2 1.9v4.7s-.5 2 3.6 2zm2.4-1.9c-.5 0-.9-.4-.9-.9 0-.5.4-.9.9-.9.5 0 .9.4.9.9s-.4.9-.9.9z"/>
@@ -220,21 +247,33 @@
         <div>
           <span class="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
             PythonCraft
-            <span class="hidden sm:inline-block text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/25 font-semibold">Zero → Senior</span>
+            <span class="hidden md:inline-block text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/25 font-semibold">Zero → Senior</span>
           </span>
         </div>
       </div>
 
+      <!-- Mode Switcher Tabs (Desktop) -->
+      <div class="hidden lg:flex items-center gap-1 pl-4 border-l border-border/80 text-xs">
+        <button onclick="switchNavMode('course')" id="desktopModeBtnCourse" class="px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/30 font-semibold">
+          <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+          <span>Курс (0–9)</span>
+        </button>
+        <button onclick="switchNavMode('problemset')" id="desktopModeBtnProblemset" class="px-3 py-1.5 rounded-lg text-theme-muted hover:text-white hover:bg-surface-hover border border-transparent font-medium transition-all flex items-center gap-1.5">
+          <i data-lucide="check-square" class="w-3.5 h-3.5 text-theme-amber"></i>
+          <span>Большой Задачник (100+)</span>
+        </button>
+      </div>
+
       <!-- Quick Nav Breadcrumb (Desktop) -->
-      <div id="headerBreadcrumb" class="hidden md:flex items-center gap-2 pl-3 border-l border-border/80 text-xs text-theme-muted truncate">
-        <span id="navModuleTitle" class="truncate max-w-[180px]">Уровень 0</span>
+      <div id="headerBreadcrumb" class="hidden xl:flex items-center gap-2 pl-3 border-l border-border/80 text-xs text-theme-muted truncate">
+        <span id="navModuleTitle" class="truncate max-w-[150px]">Уровень 0</span>
         <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-theme-faint shrink-0"></i>
-        <span id="navLessonTitle" class="text-theme-text font-medium truncate max-w-[200px]">Тема</span>
+        <span id="navLessonTitle" class="text-theme-text font-medium truncate max-w-[170px]">Тема</span>
       </div>
     </div>
 
     <!-- Right Controls: Engine Status, XP, Sandbox, Reset -->
-    <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+    <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
       <!-- Engine Status Badge -->
       <div id="engineStatus" class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-surface-subtle border border-border text-xs text-theme-muted">
         <span class="w-2 h-2 rounded-full bg-theme-amber engine-pulse" id="engineDot"></span>
@@ -242,7 +281,7 @@
       </div>
 
       <!-- XP & Progress -->
-      <div class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg bg-surface-subtle border border-border text-xs">
+      <div class="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 rounded-lg bg-surface-subtle border border-border text-xs">
         <div class="flex items-center gap-1 text-theme-amber font-mono font-semibold">
           <i data-lucide="award" class="w-3.5 h-3.5 fill-current"></i>
           <span id="userXp">0</span> XP
@@ -254,10 +293,10 @@
         </div>
       </div>
 
-      <!-- Sandbox Button -->
-      <button onclick="toggleSandboxMode()" id="sandboxBtn" class="btn-tactile flex items-center gap-1.5 text-xs px-2.5 sm:px-3.5 py-1.5 rounded-lg border border-border bg-surface-subtle hover:bg-surface-hover hover:border-theme-emerald/30 text-theme-text font-medium transition-all">
-        <i data-lucide="terminal" class="w-3.5 h-3.5 text-theme-emerald"></i>
-        <span id="sandboxBtnText" class="hidden xs:inline">Песочница</span>
+      <!-- Sandbox Button (ALWAYS visible and functional on mobile and desktop!) -->
+      <button onclick="toggleSandboxMode()" id="sandboxBtn" class="btn-tactile flex items-center gap-1.5 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg border border-border bg-surface-subtle hover:bg-surface-hover hover:border-theme-emerald/30 text-theme-text font-medium transition-all shadow-sm">
+        <i data-lucide="terminal" class="w-3.5 h-3.5 text-theme-emerald shrink-0"></i>
+        <span id="sandboxBtnText" class="font-medium">Песочница</span>
       </button>
 
       <!-- Reset Progress -->
@@ -267,36 +306,40 @@
     </div>
   </header>
 
-  <!-- MOBILE NAVIGATION TABS (Strict 44px min touch height on mobile/tablet) -->
-  <div id="mobileTabBar" class="lg:hidden shrink-0 flex border-b border-border bg-surface text-xs font-medium z-30 shadow-sm">
-    <button onclick="switchMobileTab('lessons')" id="tabBtnLessons" class="flex-1 py-3 text-center text-theme-muted border-b-2 border-transparent transition-all flex items-center justify-center gap-1.5">
+  <!-- MOBILE NAVIGATION TABS (Strict 44px touch target on mobile/tablet) -->
+  <div id="mobileTabBar" class="lg:hidden shrink-0 flex border-b border-border bg-surface text-xs font-medium z-30 shadow-sm overflow-x-auto no-scrollbar">
+    <button onclick="switchMobileNav('course')" id="tabBtnCourse" class="flex-1 min-w-[75px] py-3 text-center text-theme-emerald border-b-2 border-theme-emerald font-semibold transition-all flex items-center justify-center gap-1">
       <span>📚</span>
-      <span>Программа</span>
+      <span>Курс</span>
     </button>
-    <button onclick="switchMobileTab('theory')" id="tabBtnTheory" class="flex-1 py-3 text-center text-theme-emerald border-b-2 border-theme-emerald font-semibold transition-all flex items-center justify-center gap-1.5">
+    <button onclick="switchMobileNav('problemset')" id="tabBtnProblemset" class="flex-1 min-w-[85px] py-3 text-center text-theme-muted hover:text-white border-b-2 border-transparent transition-all flex items-center justify-center gap-1">
+      <span>🎯</span>
+      <span>Задачник</span>
+    </button>
+    <button onclick="switchMobileNav('theory')" id="tabBtnTheory" class="flex-1 min-w-[75px] py-3 text-center text-theme-muted hover:text-white border-b-2 border-transparent transition-all flex items-center justify-center gap-1">
       <span>📖</span>
-      <span>Теория & Задачи</span>
+      <span id="tabBtnTheoryText">Урок</span>
     </button>
-    <button onclick="switchMobileTab('editor')" id="tabBtnEditor" class="flex-1 py-3 text-center text-theme-muted border-b-2 border-transparent transition-all flex items-center justify-center gap-1.5">
+    <button onclick="switchMobileNav('editor')" id="tabBtnEditor" class="flex-1 min-w-[80px] py-3 text-center text-theme-muted hover:text-white border-b-2 border-transparent transition-all flex items-center justify-center gap-1">
       <span>💻</span>
-      <span>Код & Вывод</span>
+      <span>Код</span>
     </button>
   </div>
 
   <!-- MAIN WORKSPACE: STRICT INDEPENDENT COLUMNS WITH ADAPTIVE RESPONSIVENESS -->
   <main class="flex-1 min-h-0 overflow-hidden flex relative">
 
-    <!-- 1. LEFT SIDEBAR: INDEPENDENT SCROLLING CURRICULUM -->
+    <!-- 1A. LEFT SIDEBAR: CURRICULUM (Уровни 0–9) -->
     <aside id="lessonsSidebar" class="w-full lg:w-80 xl:w-88 h-full flex flex-col shrink-0 border-r border-border bg-surface overflow-hidden z-20">
       
       <!-- Curriculum Header with Stylized Custom Dropdown (Fixed shrink-0) -->
-      <div class="p-3.5 border-b border-border bg-surface-subtle/40 shrink-0">
+      <div class="p-3 sm:p-3.5 border-b border-border bg-surface-subtle/40 shrink-0">
         <div class="flex items-center justify-between mb-2.5">
           <span class="text-xs font-bold uppercase tracking-wider text-theme-muted flex items-center gap-1.5">
             <i data-lucide="layers" class="w-3.5 h-3.5 text-theme-emerald"></i>
             План обучения (Уровни 0–9)
           </span>
-          <span id="lessonsCountBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-surface border border-border text-theme-emerald font-semibold">0/43</span>
+          <span id="lessonsCountBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-surface border border-border text-theme-emerald font-semibold">0/45</span>
         </div>
 
         <!-- STYLIZED ANIMATED LEVEL DROPDOWN -->
@@ -331,6 +374,128 @@
       </div>
     </aside>
 
+    <!-- 1B. LEFT SIDEBAR: PROBLEM SET / ТРЕНАЖЁР (105 ЗАДАЧ) -->
+    <aside id="problemsetSidebar" class="hidden w-full lg:w-80 xl:w-88 h-full flex flex-col shrink-0 border-r border-border bg-surface overflow-hidden z-20">
+      
+      <!-- Problem Set Header with Category Filter and Search -->
+      <div class="p-3 sm:p-3.5 border-b border-border bg-surface-subtle/40 shrink-0 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-theme-amber flex items-center gap-1.5">
+            <i data-lucide="crosshair" class="w-3.5 h-3.5"></i>
+            Большой Задачник Python
+          </span>
+          <span id="problemsetCountBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-surface border border-border text-theme-amber font-semibold">0/105</span>
+        </div>
+
+        <!-- Mode Switcher Tabs: Каталог vs Рандомайзер -->
+        <div class="grid grid-cols-2 p-1 rounded-xl bg-surface border border-border text-xs gap-1">
+          <button type="button" id="tabCatalogBtn" onclick="setProblemsetMode('catalog')" class="py-1.5 px-2 rounded-lg font-semibold bg-theme-amberMuted text-theme-amber border border-theme-amber/30 flex items-center justify-center gap-1.5 transition-all">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span>Каталог</span>
+          </button>
+          <button type="button" id="tabRandomBtn" onclick="setProblemsetMode('random')" class="py-1.5 px-2 rounded-lg text-theme-muted hover:text-white flex items-center justify-center gap-1.5 transition-all">
+            <i data-lucide="shuffle" class="w-3.5 h-3.5"></i>
+            <span>Рандомайзер</span>
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative">
+          <i data-lucide="search" class="w-3.5 h-3.5 text-theme-faint absolute left-3 top-2.5"></i>
+          <input type="text" id="problemSearchInput" oninput="handleProblemSearch(this.value)" placeholder="Поиск задач по коду или теме..." class="w-full pl-8 pr-3 py-1.5 rounded-lg bg-surface border border-border text-xs text-white placeholder-theme-faint focus:outline-none focus:border-theme-amber/50">
+        </div>
+
+        <!-- CATALOG CONTROLS PANEL (Visible by default) -->
+        <div id="catalogControlsPanel" class="space-y-2">
+          <!-- Sort & Status Row -->
+          <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+            <div>
+              <label class="text-[10px] text-theme-faint block mb-0.5">Сортировка:</label>
+              <select id="problemSortSelect" onchange="handleProblemSortChange(this.value)" class="w-full py-1 px-1.5 rounded-md bg-surface border border-border text-white text-[11px] focus:outline-none focus:border-theme-amber/50">
+                <option value="topic">По темам (курс)</option>
+                <option value="easy-first">Сначала лёгкие</option>
+                <option value="hard-first">Сначала сложные</option>
+                <option value="alpha">По названию (А → Я)</option>
+                <option value="xp-desc">По очкам XP (max)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] text-theme-faint block mb-0.5">Статус:</label>
+              <select id="problemStatusSelect" onchange="handleProblemStatusChange(this.value)" class="w-full py-1 px-1.5 rounded-md bg-surface border border-border text-white text-[11px] focus:outline-none focus:border-theme-amber/50">
+                <option value="all">Все задачи</option>
+                <option value="unsolved">Только не решённые</option>
+                <option value="solved">Только решённые ✓</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Category Pills -->
+          <div>
+            <div class="text-[10px] text-theme-faint mb-1 flex items-center justify-between">
+              <span>Темы / Разделы:</span>
+              <span id="activeTopicBadge" class="text-theme-amber font-mono text-[10px]">Все темы</span>
+            </div>
+            <div id="problemCategoryPills" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[11px]">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- RANDOM WORKOUT GENERATOR PANEL -->
+        <div id="randomWorkoutPanel" class="hidden p-2.5 rounded-xl bg-surface border border-theme-amber/25 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="dices" class="w-3.5 h-3.5 text-theme-amber"></i>
+              Генератор сессий
+            </span>
+            <span id="randomActiveBadge" class="hidden text-[10px] font-mono px-1.5 py-0.2 rounded bg-theme-amberMuted text-theme-amber border border-theme-amber/30">Активен</span>
+          </div>
+          
+          <div class="grid grid-cols-2 gap-1.5 text-[11px]">
+            <div>
+              <label class="text-[10px] text-theme-faint block mb-0.5">Сложность:</label>
+              <select id="randomDiffSelect" class="w-full py-1 px-1.5 rounded-md bg-surface-subtle border border-border text-white text-[11px] focus:outline-none focus:border-theme-amber/50">
+                <option value="all">Любая</option>
+                <option value="Easy">Легкая (Easy)</option>
+                <option value="Medium">Средняя (Medium)</option>
+                <option value="Hard">Сложная (Hard)</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] text-theme-faint block mb-0.5">Количество:</label>
+              <select id="randomCountSelect" class="w-full py-1 px-1.5 rounded-md bg-surface-subtle border border-border text-white text-[11px] focus:outline-none focus:border-theme-amber/50">
+                <option value="1">1 задача (Блиц)</option>
+                <option value="3">3 задачи</option>
+                <option value="5">5 задач (Сет)</option>
+                <option value="10">10 задач (Марафон)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5 pt-0.5">
+            <button type="button" onclick="generateRandomWorkout()" class="btn-tactile flex-1 py-1.5 px-2 rounded-lg bg-theme-amber hover:bg-theme-amberHover text-canvas font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>Сгенерировать</span>
+            </button>
+            <button type="button" id="resetWorkoutBtn" onclick="resetRandomWorkout()" title="Сбросить подборку ко всем задачам" class="hidden btn-tactile p-1.5 rounded-lg bg-surface-subtle hover:bg-surface-hover border border-border text-theme-muted hover:text-theme-coral">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Problem Set List Scrollable (Independent vertical scroll) -->
+      <div id="problemsetContainer" class="flex-1 min-h-0 overflow-y-auto p-2.5 space-y-1.5">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Problem Set Footer -->
+      <div class="p-3 border-t border-border bg-surface-subtle/50 text-[11px] text-theme-muted flex items-center justify-between shrink-0">
+        <span class="text-theme-faint">Автопроверка вывода</span>
+        <span class="font-mono text-theme-emerald text-[10px] font-semibold" id="problemSetFooterCount">100+ задач с автопроверкой</span>
+      </div>
+    </aside>
+
     <!-- 2. MIDDLE COLUMN: INDEPENDENT SCROLLING THEORY & TASKS SPEC -->
     <section id="theoryPanel" class="w-full lg:w-[440px] xl:w-[490px] h-full flex flex-col shrink-0 border-r border-border bg-canvas overflow-hidden z-10">
       
@@ -349,14 +514,14 @@
           <!-- Rendered theory markdown/html -->
         </div>
 
-        <!-- 1. CODING TASKS STEPPER (Shown when lesson.tasks.length > 0) -->
+        <!-- 1. CODING TASKS STEPPER (Shown when lesson.tasks.length > 0 or in problemset mode) -->
         <div id="codingTasksSection" class="mt-6 p-4 rounded-xl bg-surface-subtle border border-border relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-1.5 h-full bg-theme-emerald"></div>
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-theme-emerald" id="taskSideIndicator"></div>
           
           <div class="flex items-center justify-between mb-3">
-            <span class="text-xs font-bold text-theme-emerald flex items-center gap-1.5">
+            <span class="text-xs font-bold text-theme-emerald flex items-center gap-1.5" id="taskSectionHeaderTitle">
               <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-              Практические задания темы:
+              Практические задания:
             </span>
             <span id="taskXpBadge" class="text-[11px] font-mono text-theme-amber font-semibold px-2 py-0.5 rounded bg-theme-amberMuted border border-theme-amber/20">+15 XP</span>
           </div>
@@ -383,7 +548,7 @@
           </div>
         </div>
 
-        <!-- 2. THEORY-ONLY COMPLETION SECTION (Shown when lesson.tasks.length === 0) -->
+        <!-- 2. THEORY-ONLY COMPLETION SECTION (Shown when lesson.tasks.length === 0 in course mode) -->
         <div id="theoryOnlySection" class="hidden mt-6 p-4 rounded-xl bg-surface-subtle border border-border relative overflow-hidden">
           <div class="absolute top-0 left-0 w-1.5 h-full bg-theme-amber"></div>
           <div class="flex items-center justify-between mb-2">
@@ -415,7 +580,7 @@
         </div>
 
         <!-- Mobile Quick Switch to Editor CTA (Visible only on mobile/tablet) -->
-        <button onclick="switchMobileTab('editor')" class="lg:hidden btn-tactile w-full py-2.5 px-4 rounded-xl bg-surface-subtle hover:bg-surface-hover border border-border text-theme-emerald font-semibold text-xs flex items-center justify-center gap-2 pb-6">
+        <button onclick="switchMobileNav('editor')" class="lg:hidden btn-tactile w-full py-3 px-4 rounded-xl bg-surface-subtle hover:bg-surface-hover border border-border text-theme-emerald font-semibold text-xs flex items-center justify-center gap-2 pb-6">
           <span>Перейти к коду и запуску</span>
           <i data-lucide="code-2" class="w-4 h-4 text-theme-emerald"></i>
         </button>
@@ -430,7 +595,7 @@
         <div class="flex items-center gap-2.5">
           <button onclick="exitSandboxMode()" class="btn-tactile flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface hover:bg-surface-hover border border-border text-xs text-theme-text font-medium">
             <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-theme-emerald"></i>
-            <span>Назад к урокам</span>
+            <span>Назад</span>
           </button>
           <div class="hidden sm:block h-4 w-px bg-border"></div>
           <span class="hidden sm:flex text-xs font-semibold text-white items-center gap-1.5">
@@ -470,9 +635,9 @@
           </div>
           <span class="text-xs text-theme-faint hidden md:inline font-mono">Ctrl + Enter для запуска</span>
           <!-- Mobile Return to Theory button -->
-          <button onclick="switchMobileTab('theory')" class="lg:hidden btn-tactile text-[11px] text-theme-muted hover:text-theme-emerald flex items-center gap-1 px-2 py-1 rounded bg-surface/50 border border-border/70">
+          <button onclick="switchMobileNav('theory')" class="lg:hidden btn-tactile text-[11px] text-theme-muted hover:text-theme-emerald flex items-center gap-1 px-2 py-1 rounded bg-surface/50 border border-border/70">
             <i data-lucide="book-open" class="w-3 h-3 text-theme-emerald"></i>
-            <span>Теория</span>
+            <span>Условие</span>
           </button>
         </div>
 
@@ -512,12 +677,12 @@
 
       <!-- CODE EDITOR CONTAINER: 60% HEIGHT PROPORTION (flex-[6] min-h-0) -->
       <div id="editorWorkspaceContainer" class="flex-[6] min-h-0 flex bg-canvas relative overflow-hidden editor-container">
-        <!-- Line Numbers Column -->
-        <div id="lineNumbers" class="w-9 sm:w-12 py-3.5 pr-2 sm:pr-2.5 text-right font-mono text-[11px] sm:text-xs text-theme-faint select-none bg-surface/15 border-r border-border/40 overflow-hidden shrink-0">
-          1
+        <!-- Line Numbers Column (Pixel-perfect aligned with code lines) -->
+        <div id="lineNumbers" class="w-10 sm:w-13 pr-2.5 sm:pr-3 text-right text-theme-faint select-none bg-surface/15 border-r border-border/40 overflow-hidden shrink-0 line-number-gutter">
+          <span class="line-num-item">1</span>
         </div>
         <!-- Code Textarea (With autocapitalize="off" autocorrect="off" for mobile phones) -->
-        <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" class="flex-1 h-full py-3.5 px-3 sm:px-4 bg-transparent code-textarea text-theme-text border-none focus:ring-0 leading-relaxed overflow-y-auto" placeholder="# Напишите ваш Python код здесь..."></textarea>
+        <textarea id="codeEditor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" class="flex-1 h-full px-3 sm:px-4 bg-transparent code-textarea text-theme-text border-none focus:ring-0 overflow-y-auto" placeholder="# Напишите ваш Python код здесь..."></textarea>
       </div>
 
       <!-- OUTPUT TERMINAL WINDOW: 40% HEIGHT PROPORTION (flex-[4] min-h-0) -->
@@ -532,7 +697,7 @@
 
           <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <!-- Validation Badge -->
-            <div id="taskStatusBadge" class="hidden text-[11px] font-medium items-center gap-1 px-2.5 py-0.5 rounded-full truncate max-w-[150px] sm:max-w-none">
+            <div id="taskStatusBadge" class="hidden text-[11px] font-medium items-center gap-1 px-2.5 py-0.5 rounded-full truncate max-w-[170px] sm:max-w-none">
               <!-- Result pill -->
             </div>
             <!-- Proportions Switcher (Toggle Compact / Standard 6:4) -->
@@ -558,9 +723,9 @@
 
   </main>
 
-  <!-- CURRICULUM DATASET & JAVASCRIPT CONTROLLERS -->
+  <!-- CURRICULUM DATASET, PROBLEM SET DATASET & JAVASCRIPT CONTROLLERS -->
   <script>
-    // INJECTED CURRICULUM DATASET FROM python_learning_plan.txt
+    // INJECTED DATASETS
     const PLAN_DATABASE = [
   {
     "id": "lvl0-01",
@@ -1426,10 +1591,1167 @@
     "tasks": []
   }
 ];
+    const PROBLEM_SET_DATABASE = [
+  {
+    "id": "prob-io-01",
+    "category": "Ввод и вывод",
+    "title": "Приветствие с разделителем",
+    "difficulty": "Easy",
+    "desc": "Выведите три слова <code>Python</code>, <code>is</code>, <code>awesome</code> в одну строку, разделяя их тройным дефисом <code>---</code>, используя аргумент <code>sep</code> в функции <code>print()</code>.",
+    "expected": "Python---is---awesome",
+    "starter": "# Выведите слова с параметром sep:\n",
+    "hint": "print('Python', 'is', 'awesome', sep='---')",
+    "xp": 10
+  },
+  {
+    "id": "prob-io-02",
+    "category": "Ввод и вывод",
+    "title": "Вывод без переноса строки",
+    "difficulty": "Easy",
+    "desc": "Вызовите <code>print()</code> трижды для вывода чисел <code>1</code>, <code>2</code>, <code>3</code>, но так, чтобы все они вывелись в одну строку через пробел, используя аргумент <code>end=' '</code>. В конце не должно быть новой строки.",
+    "expected": "1 2 3",
+    "starter": "# Вызовите три print() с параметром end:\n",
+    "hint": "print(1, end=' ')\nprint(2, end=' ')\nprint(3, end='')",
+    "xp": 10
+  },
+  {
+    "id": "prob-io-03",
+    "category": "Ввод и вывод",
+    "title": "Табличный вывод и f-строки",
+    "difficulty": "Easy",
+    "desc": "Даны переменные <code>item = 'Ноутбук'</code> и <code>price = 75000.5</code>. Выведите строку вида <code>Товар: Ноутбук | Цена: 75000.50 руб.</code> с ровно двумя знаками после запятой у цены.",
+    "expected": "Товар: Ноутбук | Цена: 75000.50 руб.",
+    "starter": "item = 'Ноутбук'\nprice = 75000.5\n# Сформируйте и выведите f-строку с форматированием .2f:\n",
+    "hint": "item = 'Ноутбук'\nprice = 75000.5\nprint(f'Товар: {item} | Цена: {price:.2f} руб.')",
+    "xp": 15
+  },
+  {
+    "id": "prob-io-04",
+    "category": "Ввод и вывод",
+    "title": "Выравнивание текста в f-строках",
+    "difficulty": "Medium",
+    "desc": "Дано число <code>count = 42</code>. Выведите его, дополненное нулями слева до 6 символов (например, <code>000042</code>).",
+    "expected": "000042",
+    "starter": "count = 42\n# Выведите число, дополненное нулями слева до ширины 6:\n",
+    "hint": "count = 42\nprint(f'{count:06d}')",
+    "xp": 15
+  },
+  {
+    "id": "prob-io-05",
+    "category": "Ввод и вывод",
+    "title": "Многострочный баннер",
+    "difficulty": "Easy",
+    "desc": "Выведите рамку 3x5 из символов <code>#</code>, где верх и низ состоят из 5 решеток, а средняя строка содержит пробелы внутри: <code>#   #</code>.",
+    "expected": "#####\n#   #\n#####",
+    "starter": "# Выведите многострочную рамку:\n",
+    "hint": "print('#####\\n#   #\\n#####')",
+    "xp": 10
+  },
+  {
+    "id": "prob-num-01",
+    "category": "Числа и арифметика",
+    "title": "Деление нацело и остаток",
+    "difficulty": "Easy",
+    "desc": "Дано общее число секунд <code>total_seconds = 3725</code>. Вычислите количество полных часов, оставшихся минут и секунд. Выведите их в формате: <code>1 ч 2 мин 5 сек</code>.",
+    "expected": "1 ч 2 мин 5 сек",
+    "starter": "total_seconds = 3725\n# Вычислите часы, минуты, секунды:\n",
+    "hint": "total_seconds = 3725\nhours = total_seconds // 3600\nminutes = (total_seconds % 3600) // 60\nseconds = total_seconds % 60\nprint(f'{hours} ч {minutes} мин {seconds} сек')",
+    "xp": 15
+  },
+  {
+    "id": "prob-num-02",
+    "category": "Числа и арифметика",
+    "title": "Сумма цифр трёхзначного числа",
+    "difficulty": "Easy",
+    "desc": "Дано трёхзначное число <code>n = 789</code>. Найдите и выведите сумму его цифр математическим способом (используя <code>//</code> и <code>%</code>, без преобразования в строку).",
+    "expected": "24",
+    "starter": "n = 789\n# Найдите сумму цифр арифметически:\n",
+    "hint": "n = 789\na = n // 100\nb = (n // 10) % 10\nc = n % 10\nprint(a + b + c)",
+    "xp": 15
+  },
+  {
+    "id": "prob-num-03",
+    "category": "Числа и арифметика",
+    "title": "Гипотенуза треугольника",
+    "difficulty": "Easy",
+    "desc": "Даны катеты прямоугольного треугольника <code>a = 6</code> и <code>b = 8</code>. Найдите длину гипотенузы по теореме Пифагора (используя оператор возведения в степень <code>**</code>) и выведите целое число.",
+    "expected": "10",
+    "starter": "a = 6\nb = 8\n# Вычислите гипотенузу c:\n",
+    "hint": "a = 6\nb = 8\nc = int((a**2 + b**2) ** 0.5)\nprint(c)",
+    "xp": 10
+  },
+  {
+    "id": "prob-num-04",
+    "category": "Числа и арифметика",
+    "title": "Округление с плавающей точкой",
+    "difficulty": "Easy",
+    "desc": "Вычислите выражение <code>0.1 + 0.2</code>, округлите результат встроенной функцией <code>round()</code> до 1 знака и сравните его с <code>0.3</code>. Выведите булев результат сравнения <code>True</code> или <code>False</code>.",
+    "expected": "True",
+    "starter": "# Проверьте равенство round(0.1 + 0.2, 1) == 0.3:\n",
+    "hint": "print(round(0.1 + 0.2, 1) == 0.3)",
+    "xp": 10
+  },
+  {
+    "id": "prob-num-05",
+    "category": "Числа и арифметика",
+    "title": "Битовые операции и чётность",
+    "difficulty": "Medium",
+    "desc": "Дано число <code>x = 104</code>. Проверьте его чётность с помощью побитового И (<code>x & 1</code>). Если результат 0 — выведите <code>Чётное</code>, иначе <code>Нечётное</code>.",
+    "expected": "Чётное",
+    "starter": "x = 104\n# Определите четность через x & 1:\n",
+    "hint": "x = 104\nprint('Нечётное' if x & 1 else 'Чётное')",
+    "xp": 15
+  },
+  {
+    "id": "prob-cond-01",
+    "category": "Условия и логика",
+    "title": "Определение знака числа",
+    "difficulty": "Easy",
+    "desc": "Дано число <code>val = -15</code>. Напишите конструкцию <code>if / elif / else</code>, которая выводит <code>Положительное</code>, <code>Отрицательное</code> или <code>Ноль</code>.",
+    "expected": "Отрицательное",
+    "starter": "val = -15\n# Напишите ветвление:\n",
+    "hint": "val = -15\nif val > 0:\n    print('Положительное')\nelif val < 0:\n    print('Отрицательное')\nelse:\n    print('Ноль')",
+    "xp": 10
+  },
+  {
+    "id": "prob-cond-02",
+    "category": "Условия и логика",
+    "title": "Високосный год",
+    "difficulty": "Medium",
+    "desc": "Дано число <code>year = 2024</code>. Год является високосным, если он делится на 4, но не делится на 100, либо делится на 400. Выведите <code>Високосный</code> или <code>Обычный</code>.",
+    "expected": "Високосный",
+    "starter": "year = 2024\n# Проверьте правило високосного года:\n",
+    "hint": "year = 2024\nis_leap = (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0)\nprint('Високосный' if is_leap else 'Обычный')",
+    "xp": 20
+  },
+  {
+    "id": "prob-cond-03",
+    "category": "Условия и логика",
+    "title": "Категория возраста (Каскад условий)",
+    "difficulty": "Easy",
+    "desc": "Дана переменная <code>age = 19</code>. Если возраст < 14: <code>Ребёнок</code>, от 14 до 17 включительно: <code>Подросток</code>, от 18 до 64: <code>Взрослый</code>, от 65: <code>Пенсионер</code>. Выведите категорию.",
+    "expected": "Взрослый",
+    "starter": "age = 19\n# Выведите возрастную группу:\n",
+    "hint": "age = 19\nif age < 14:\n    print('Ребёнок')\nelif age <= 17:\n    print('Подросток')\nelif age <= 64:\n    print('Взрослый')\nelse:\n    print('Пенсионер')",
+    "xp": 15
+  },
+  {
+    "id": "prob-cond-04",
+    "category": "Условия и логика",
+    "title": "Pattern Matching HTTP-статуса",
+    "difficulty": "Medium",
+    "desc": "Дана переменная <code>code = 404</code>. Используя оператор <code>match code:</code>, сопоставьте: <code>200 -> OK</code>, <code>404 -> Not Found</code>, <code>500 -> Server Error</code>, <code>_ -> Unknown</code>. Выведите результат.",
+    "expected": "Not Found",
+    "starter": "code = 404\n# Используйте match / case:\n",
+    "hint": "code = 404\nmatch code:\n    case 200:\n        print('OK')\n    case 404:\n        print('Not Found')\n    case 500:\n        print('Server Error')\n    case _:\n        print('Unknown')",
+    "xp": 20
+  },
+  {
+    "id": "prob-cond-05",
+    "category": "Условия и логика",
+    "title": "Максимум из трёх чисел",
+    "difficulty": "Easy",
+    "desc": "Даны три числа: <code>a = 47</code>, <code>b = 89</code>, <code>c = 52</code>. Не используя встроенную функцию <code>max()</code>, найдите и выведите наибольшее число при помощи условий <code>if / else</code>.",
+    "expected": "89",
+    "starter": "a, b, c = 47, 89, 52\n# Найдите максимум через условия:\n",
+    "hint": "a, b, c = 47, 89, 52\nm = a\nif b > m:\n    m = b\nif c > m:\n    m = c\nprint(m)",
+    "xp": 15
+  },
+  {
+    "id": "prob-loop-01",
+    "category": "Циклы и итерации",
+    "title": "Таблица умножения на 7",
+    "difficulty": "Easy",
+    "desc": "С помощью цикла <code>for</code> выведите произведения числа 7 на множители от 1 до 5 в формате: <code>7 * 1 = 7</code>, <code>7 * 2 = 14</code> и т.д. (каждое на новой строке).",
+    "expected": "7 * 1 = 7\n7 * 2 = 14\n7 * 3 = 21\n7 * 4 = 28\n7 * 5 = 35",
+    "starter": "# Напишите цикл for с range:\n",
+    "hint": "for i in range(1, 6):\n    print(f'7 * {i} = {7 * i}')",
+    "xp": 15
+  },
+  {
+    "id": "prob-loop-02",
+    "category": "Циклы и итерации",
+    "title": "Сумма нечётных чисел",
+    "difficulty": "Easy",
+    "desc": "Используя цикл <code>for</code> и <code>range(1, 51)</code>, найдите сумму всех нечётных чисел в диапазоне от 1 до 50 включительно. Выведите итоговую сумму.",
+    "expected": "625",
+    "starter": "# Найдите сумму нечётных от 1 до 50:\n",
+    "hint": "total = 0\nfor x in range(1, 51, 2):\n    total += x\nprint(total)",
+    "xp": 15
+  },
+  {
+    "id": "prob-loop-03",
+    "category": "Циклы и итерации",
+    "title": "Факториал через цикл while",
+    "difficulty": "Easy",
+    "desc": "Дано число <code>n = 6</code>. Вычислите его факториал <code>6! = 1 * 2 * 3 * 4 * 5 * 6</code>, используя цикл <code>while</code>. Выведите результат.",
+    "expected": "720",
+    "starter": "n = 6\n# Вычислите n! с помощью while:\n",
+    "hint": "n = 6\nfact = 1\ncurr = 1\nwhile curr <= n:\n    fact *= curr\n    curr += 1\nprint(fact)",
+    "xp": 15
+  },
+  {
+    "id": "prob-loop-04",
+    "category": "Циклы и итерации",
+    "title": "Разворот числа (Reverse Integer)",
+    "difficulty": "Medium",
+    "desc": "Дано целое положительное число <code>num = 12345</code>. Разверните его математически в цикле <code>while</code> (без преобразования в строку), чтобы получилось <code>54321</code>, и выведите результат.",
+    "expected": "54321",
+    "starter": "num = 12345\n# Разверните число математически:\n",
+    "hint": "num = 12345\nrev = 0\nwhile num > 0:\n    rev = rev * 10 + (num % 10)\n    num //= 10\nprint(rev)",
+    "xp": 20
+  },
+  {
+    "id": "prob-loop-05",
+    "category": "Циклы и итерации",
+    "title": "Счётчик делителей и простое число",
+    "difficulty": "Medium",
+    "desc": "Дано число <code>n = 29</code>. Проверьте с помощью цикла, является ли оно простым (делится только на 1 и на само себя). Выведите <code>Простое</code> или <code>Составное</code>.",
+    "expected": "Простое",
+    "starter": "n = 29\n# Проверьте число на простоту:\n",
+    "hint": "n = 29\nis_prime = n > 1\nfor d in range(2, int(n**0.5) + 1):\n    if n % d == 0:\n        is_prime = False\n        break\nprint('Простое' if is_prime else 'Составное')",
+    "xp": 20
+  },
+  {
+    "id": "prob-combo-01",
+    "category": "Комплексные основы",
+    "title": "Классический FizzBuzz",
+    "difficulty": "Medium",
+    "desc": "Для каждого числа от 1 до 15 включительно выведите:<br>• <code>FizzBuzz</code> — если число делится и на 3, и на 5;<br>• <code>Fizz</code> — если делится только на 3;<br>• <code>Buzz</code> — если делится только на 5;<br>• само число, если ни одно условие не выполнено.<br>Каждое значение выводите на отдельной строке.",
+    "expected": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz",
+    "starter": "# Реализуйте FizzBuzz от 1 до 15:\n",
+    "hint": "for i in range(1, 16):\n    if i % 15 == 0:\n        print('FizzBuzz')\n    elif i % 3 == 0:\n        print('Fizz')\n    elif i % 5 == 0:\n        print('Buzz')\n    else:\n        print(i)",
+    "xp": 25
+  },
+  {
+    "id": "prob-combo-02",
+    "category": "Комплексные основы",
+    "title": "Сумма чётных квадратов с фильтром",
+    "difficulty": "Medium",
+    "desc": "Пройдите циклом по числам от 1 до 20. Если число чётное — возведите его в квадрат. Если квадрат делится на 16 — пропустите его (<code>continue</code>). Найдите сумму остальных чётных квадратов и выведите результат.",
+    "expected": "760",
+    "starter": "# Просуммируйте квадраты четных чисел без делящихся на 16:\n",
+    "hint": "total = 0\nfor x in range(1, 21):\n    if x % 2 == 0:\n        sq = x ** 2\n        if sq % 16 == 0:\n            continue\n        total += sq\nprint(total)",
+    "xp": 25
+  },
+  {
+    "id": "prob-combo-03",
+    "category": "Комплексные основы",
+    "title": "Подсчёт гласных и согласных в строке",
+    "difficulty": "Medium",
+    "desc": "Дана строка <code>text = 'Python Programming Language'</code>. Подсчитайте количество гласных латинских букв (a, e, i, o, u, y без учёта регистра). Выведите: <code>Гласных: X</code>.",
+    "expected": "Гласных: 8",
+    "starter": "text = 'Python Programming Language'\n# Подсчитайте гласные буквы:\n",
+    "hint": "text = 'Python Programming Language'\nvowels = set('aeiouy')\ncount = sum(1 for ch in text.lower() if ch in vowels)\nprint(f'Гласных: {count}')",
+    "xp": 20
+  },
+  {
+    "id": "prob-combo-04",
+    "category": "Комплексные основы",
+    "title": "Поиск первого дубликата",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел <code>nums = [2, 5, 1, 2, 3, 5, 1, 2, 4]</code>. Найдите первое число, которое встречается в списке повторно (по мере обхода слева направо). Выведите найденное число.",
+    "expected": "2",
+    "starter": "nums = [2, 5, 1, 2, 3, 5, 1, 2, 4]\n# Найдите первый повторяющийся элемент:\n",
+    "hint": "nums = [2, 5, 1, 2, 3, 5, 1, 2, 4]\nseen = set()\nfor x in nums:\n    if x in seen:\n        print(x)\n        break\n    seen.add(x)",
+    "xp": 20
+  },
+  {
+    "id": "prob-combo-05",
+    "category": "Комплексные основы",
+    "title": "Сжатие строки (Run-Length Encoding)",
+    "difficulty": "Hard",
+    "desc": "Дана строка <code>s = 'AAAABBBCCDAA'</code>. Сожмите её по алгоритму RLE: подряд идущие символы заменяются на символ и количество (например, <code>A4B3C2D1A2</code>). Выведите результат.",
+    "expected": "A4B3C2D1A2",
+    "starter": "s = 'AAAABBBCCDAA'\n# Реализуйте алгоритм сжатия RLE:\n",
+    "hint": "s = 'AAAABBBCCDAA'\nres = []\ncount = 1\nfor i in range(1, len(s)):\n    if s[i] == s[i-1]:\n        count += 1\n    else:\n        res.append(f'{s[i-1]}{count}')\n        count = 1\nres.append(f'{s[-1]}{count}')\nprint(''.join(res))",
+    "xp": 30
+  },
+  {
+    "id": "prob-list-01",
+    "category": "Списки и кортежи",
+    "title": "Удаление дубликатов с сохранением порядка",
+    "difficulty": "Medium",
+    "desc": "Дан список <code>items = [10, 20, 10, 30, 20, 40, 50, 30]</code>. Создайте новый список без повторений, сохранив исходный порядок первого появления элементов. Выведите его.",
+    "expected": "[10, 20, 30, 40, 50]",
+    "starter": "items = [10, 20, 10, 30, 20, 40, 50, 30]\n# Удалите дубликаты, сохранив порядок:\n",
+    "hint": "items = [10, 20, 10, 30, 20, 40, 50, 30]\nunique = list(dict.fromkeys(items))\nprint(unique)",
+    "xp": 20
+  },
+  {
+    "id": "prob-list-02",
+    "category": "Списки и кортежи",
+    "title": "Второй по величине элемент",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел <code>values = [45, 12, 89, 89, 23, 77, 89]</code>. Найдите второе по величине уникальное число (строго меньшее максимума). Выведите его.",
+    "expected": "77",
+    "starter": "values = [45, 12, 89, 89, 23, 77, 89]\n# Найдите второй максимум среди уникальных значений:\n",
+    "hint": "values = [45, 12, 89, 89, 23, 77, 89]\nunique_sorted = sorted(set(values), reverse=True)\nprint(unique_sorted[1])",
+    "xp": 20
+  },
+  {
+    "id": "prob-list-03",
+    "category": "Списки и кортежи",
+    "title": "Циклический сдвиг списка вправо",
+    "difficulty": "Medium",
+    "desc": "Дан список <code>lst = [1, 2, 3, 4, 5]</code> и шаг сдвига <code>k = 2</code>. Сдвиньте элементы вправо на <code>k</code> позиций с помощью срезов так, чтобы элементы с конца переместились в начало (<code>[4, 5, 1, 2, 3]</code>). Выведите результат.",
+    "expected": "[4, 5, 1, 2, 3]",
+    "starter": "lst = [1, 2, 3, 4, 5]\nk = 2\n# Сдвиньте список срезами:\n",
+    "hint": "lst = [1, 2, 3, 4, 5]\nk = 2\nshifted = lst[-k:] + lst[:-k]\nprint(shifted)",
+    "xp": 20
+  },
+  {
+    "id": "prob-list-04",
+    "category": "Списки и кортежи",
+    "title": "Транспонирование матрицы через List Comprehension",
+    "difficulty": "Hard",
+    "desc": "Дана матрица 2x3:<br><code>matrix = [[1, 2, 3], [4, 5, 6]]</code>.<br>Транспонируйте её в матрицу 3x2 с помощью генератора списков или <code>zip(*matrix)</code>. Выведите список списков.",
+    "expected": "[[1, 4], [2, 5], [3, 6]]",
+    "starter": "matrix = [[1, 2, 3], [4, 5, 6]]\n# Транспонируйте матрицу:\n",
+    "hint": "matrix = [[1, 2, 3], [4, 5, 6]]\ntransposed = [list(row) for row in zip(*matrix)]\nprint(transposed)",
+    "xp": 25
+  },
+  {
+    "id": "prob-list-05",
+    "category": "Списки и кортежи",
+    "title": "Слияние двух отсортированных списков",
+    "difficulty": "Medium",
+    "desc": "Даны два уже отсортированных списка <code>a = [1, 4, 7]</code> и <code>b = [2, 3, 5, 8]</code>. Объедините их в один отсортированный список и выведите результат.",
+    "expected": "[1, 2, 3, 4, 5, 7, 8]",
+    "starter": "a = [1, 4, 7]\nb = [2, 3, 5, 8]\n# Объедините списки в отсортированный вид:\n",
+    "hint": "a = [1, 4, 7]\nb = [2, 3, 5, 8]\nprint(sorted(a + b))",
+    "xp": 15
+  },
+  {
+    "id": "prob-dict-01",
+    "category": "Словари и множества",
+    "title": "Частотный словарь символов",
+    "difficulty": "Medium",
+    "desc": "Дано слово <code>word = 'abracadabra'</code>. Посчитайте, сколько раз встречается каждый символ, и выведите отсортированные по алфавиту пары <code>буква: количество</code> через запятую.",
+    "expected": "a: 5, b: 2, c: 1, d: 1, r: 2",
+    "starter": "word = 'abracadabra'\n# Сформируйте частотный словарь и выведите:\n",
+    "hint": "word = 'abracadabra'\nfrom collections import Counter\ncounts = Counter(word)\nres = [f'{k}: {v}' for k, v in sorted(counts.items())]\nprint(', '.join(res))",
+    "xp": 20
+  },
+  {
+    "id": "prob-dict-02",
+    "category": "Словари и множества",
+    "title": "Инвертирование словаря (Keys <-> Values)",
+    "difficulty": "Medium",
+    "desc": "Дан словарь кодов валют: <code>rates = {'USD': 92, 'EUR': 100, 'CNY': 13}</code>. Поменяйте местами ключи и значения с помощью Dict Comprehension. Выведите полученный словарь.",
+    "expected": "{92: 'USD', 100: 'EUR', 13: 'CNY'}",
+    "starter": "rates = {'USD': 92, 'EUR': 100, 'CNY': 13}\n# Инвертируйте словарь:\n",
+    "hint": "rates = {'USD': 92, 'EUR': 100, 'CNY': 13}\ninverted = {v: k for k, v in rates.items()}\nprint(inverted)",
+    "xp": 15
+  },
+  {
+    "id": "prob-dict-03",
+    "category": "Словари и множества",
+    "title": "Пересечение и разность множеств",
+    "difficulty": "Easy",
+    "desc": "Даны списки навыков двух кандидатов:<br><code>c1 = {'Python', 'SQL', 'Git', 'Docker'}</code><br><code>c2 = {'Python', 'Go', 'Docker', 'Kubernetes'}</code><br>Найдите общие навыки (пересечение) и отсортируйте их по алфавиту. Выведите список общих навыков.",
+    "expected": "['Docker', 'Python']",
+    "starter": "c1 = {'Python', 'SQL', 'Git', 'Docker'}\nc2 = {'Python', 'Go', 'Docker', 'Kubernetes'}\n# Найдите пересечение и отсортируйте:\n",
+    "hint": "c1 = {'Python', 'SQL', 'Git', 'Docker'}\nc2 = {'Python', 'Go', 'Docker', 'Kubernetes'}\ncommon = sorted(c1 & c2)\nprint(common)",
+    "xp": 15
+  },
+  {
+    "id": "prob-dict-04",
+    "category": "Словари и множества",
+    "title": "Группировка анаграмм",
+    "difficulty": "Hard",
+    "desc": "Дан список слов <code>words = ['eat', 'tea', 'tan', 'ate', 'nat', 'bat']</code>. Слова являются анаграммами, если состоят из одинаковых букв. Сгруппируйте их в список списков анаграмм (отсортируйте внутренние списки, а внешние группы отсортируйте по длине первой строки). Выведите сгруппированный список.",
+    "expected": "[['bat'], ['nat', 'tan'], ['ate', 'eat', 'tea']]",
+    "starter": "words = ['eat', 'tea', 'tan', 'ate', 'nat', 'bat']\n# Сгруппируйте слова по анаграммам:\n",
+    "hint": "words = ['eat', 'tea', 'tan', 'ate', 'nat', 'bat']\nfrom collections import defaultdict\ngroups = defaultdict(list)\nfor w in words:\n    key = ''.join(sorted(w))\n    groups[key].append(w)\nres = [sorted(v) for v in groups.values()]\nres.sort(key=lambda x: (len(x), x[0]))\nprint(res)",
+    "xp": 30
+  },
+  {
+    "id": "prob-fn-01",
+    "category": "Функции и алгоритмы",
+    "title": "Универсальный суммирующий декоратор / *args",
+    "difficulty": "Medium",
+    "desc": "Напишите функцию <code>sum_numbers(*args)</code>, которая принимает произвольное количество аргументов любого типа, фильтрует только целые и вещественные числа (<code>int</code>, <code>float</code>, исключая <code>bool</code>!) и возвращает их сумму. Вызовите её с аргументами: <code>10, 'hello', 20.5, True, [1, 2], 5</code> и выведите результат.",
+    "expected": "35.5",
+    "starter": "# Напишите функцию sum_numbers(*args):\n\n# Вызовите её с: (10, 'hello', 20.5, True, [1, 2], 5)\n",
+    "hint": "def sum_numbers(*args):\n    return sum(x for x in args if type(x) in (int, float))\n\nprint(sum_numbers(10, 'hello', 20.5, True, [1, 2], 5))",
+    "xp": 25
+  },
+  {
+    "id": "prob-fn-02",
+    "category": "Функции и алгоритмы",
+    "title": "Числа Фибоначчи через генератор",
+    "difficulty": "Medium",
+    "desc": "Напишите функцию-генератор <code>fibonacci(n)</code>, возвращающую первые <code>n</code> чисел Фибоначчи начиная с 0 и 1. Сгенерируйте первые 8 чисел и выведите их в виде списка.",
+    "expected": "[0, 1, 1, 2, 3, 5, 8, 13]",
+    "starter": "# Напишите генератор fibonacci(n):\n\n# Выведите первые 8 чисел:\n",
+    "hint": "def fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        yield a\n        a, b = b, a + b\n\nprint(list(fibonacci(8)))",
+    "xp": 20
+  },
+  {
+    "id": "prob-fn-03",
+    "category": "Функции и алгоритмы",
+    "title": "Проверка палиндрома без учёта пробелов и регистра",
+    "difficulty": "Easy",
+    "desc": "Напишите функцию <code>is_palindrome(s)</code>. Проверьте строку <code>'А роза упала на лапу Азора'</code> (оставив только буквы в нижнем регистре). Выведите булево значение <code>True</code> или <code>False</code>.",
+    "expected": "True",
+    "starter": "phrase = 'А роза упала на лапу Азора'\n# Проверьте на палиндром:\n",
+    "hint": "phrase = 'А роза упала на лапу Азора'\nclean = [ch.lower() for ch in phrase if ch.isalpha()]\nprint(clean == clean[::-1])",
+    "xp": 15
+  },
+  {
+    "id": "prob-fn-04",
+    "category": "Функции и алгоритмы",
+    "title": "Наибольший общий делитель (Алгоритм Евклида)",
+    "difficulty": "Medium",
+    "desc": "Реализуйте функцию <code>gcd(a, b)</code> с помощью классического алгоритма Евклида (пока <code>b != 0</code>: <code>a, b = b, a % b</code>). Найдите НОД чисел <code>1071</code> и <code>462</code> и выведите результат.",
+    "expected": "21",
+    "starter": "# Реализуйте алгоритм Евклида для чисел 1071 и 462:\n",
+    "hint": "def gcd(a, b):\n    while b != 0:\n        a, b = b, a % b\n    return a\n\nprint(gcd(1071, 462))",
+    "xp": 20
+  },
+  {
+    "id": "prob-fn-05",
+    "category": "Функции и алгоритмы",
+    "title": "Бинарный поиск (Binary Search)",
+    "difficulty": "Hard",
+    "desc": "Дан отсортированный список <code>arr = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]</code> и искомый элемент <code>target = 23</code>. Напишите бинарный поиск, который находит индекс элемента за <code>O(log n)</code>. Выведите найденный индекс.",
+    "expected": "5",
+    "starter": "arr = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]\ntarget = 23\n# Реализуйте бинарный поиск:\n",
+    "hint": "arr = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91]\ntarget = 23\nlow, high = 0, len(arr) - 1\nans = -1\nwhile low <= high:\n    mid = (low + high) // 2\n    if arr[mid] == target:\n        ans = mid\n        break\n    elif arr[mid] < target:\n        low = mid + 1\n    else:\n        high = mid - 1\nprint(ans)",
+    "xp": 30
+  },
+  {
+    "id": "prob-algo-01",
+    "category": "Алгоритмические задачи",
+    "title": "Two Sum (Сумма двух чисел)",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел <code>nums = [2, 7, 11, 15]</code> и целевое значение <code>target = 9</code>. Найдите индексы двух чисел, сумма которых равна целевому значению. Выведите кортеж индексов.",
+    "expected": "(0, 1)",
+    "starter": "nums = [2, 7, 11, 15]\ntarget = 9\n# Найдите индексы двух слагаемых:\n",
+    "hint": "nums = [2, 7, 11, 15]\ntarget = 9\nseen = {}\nres = None\nfor idx, num in enumerate(nums):\n    diff = target - num\n    if diff in seen:\n        res = (seen[diff], idx)\n        break\n    seen[num] = idx\nprint(res)",
+    "xp": 25
+  },
+  {
+    "id": "prob-algo-02",
+    "category": "Алгоритмические задачи",
+    "title": "Проверка правильной скобочной последовательности",
+    "difficulty": "Hard",
+    "desc": "Дана строка со скобками <code>brackets = '{[()]}'</code>. Используя стек (список), проверьте сбалансированность скобок <code>()</code>, <code>[]</code>, <code>{}</code>. Выведите <code>True</code>, если последовательность корректна, иначе <code>False</code>.",
+    "expected": "True",
+    "starter": "brackets = '{[()]}'\n# Проверьте сбалансированность скобок через стек:\n",
+    "hint": "brackets = '{[()]}'\npairs = {')': '(', ']': '[', '}': '{'}\nstack = []\nis_valid = True\nfor ch in brackets:\n    if ch in pairs.values():\n        stack.append(ch)\n    elif ch in pairs:\n        if not stack or stack.pop() != pairs[ch]:\n            is_valid = False\n            break\nif stack:\n    is_valid = False\nprint(is_valid)",
+    "xp": 30
+  },
+  {
+    "id": "prob-algo-03",
+    "category": "Алгоритмические задачи",
+    "title": "Сортировка пузырьком (Bubble Sort)",
+    "difficulty": "Medium",
+    "desc": "Дан неотсортированный список <code>data = [64, 34, 25, 12, 22, 11, 90]</code>. Реализуйте алгоритм сортировки пузырьком на месте (in-place) и выведите отсортированный список.",
+    "expected": "[11, 12, 22, 25, 34, 64, 90]",
+    "starter": "data = [64, 34, 25, 12, 22, 11, 90]\n# Отсортируйте список пузырьком:\n",
+    "hint": "data = [64, 34, 25, 12, 22, 11, 90]\nn = len(data)\nfor i in range(n):\n    for j in range(0, n - i - 1):\n        if data[j] > data[j + 1]:\n            data[j], data[j + 1] = data[j + 1], data[j]\nprint(data)",
+    "xp": 20
+  },
+  {
+    "id": "prob-algo-04",
+    "category": "Алгоритмические задачи",
+    "title": "Поиск пропущенного числа (1 to N)",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел от 1 до 10, в котором пропущено ровно одно число: <code>arr = [1, 2, 3, 4, 6, 7, 8, 9, 10]</code>. Найдите пропущенное число с помощью формулы суммы арифметической прогрессии <code>n * (n + 1) // 2</code> без перебора. Выведите результат.",
+    "expected": "5",
+    "starter": "arr = [1, 2, 3, 4, 6, 7, 8, 9, 10]\n# Найдите пропущенное число математически:\n",
+    "hint": "arr = [1, 2, 3, 4, 6, 7, 8, 9, 10]\nn = 10\nexpected_sum = n * (n + 1) // 2\nactual_sum = sum(arr)\nprint(expected_sum - actual_sum)",
+    "xp": 20
+  },
+  {
+    "id": "prob-algo-05",
+    "category": "Алгоритмические задачи",
+    "title": "Максимальный подмассив (Алгоритм Кадане)",
+    "difficulty": "Hard",
+    "desc": "Дан список чисел <code>nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]</code>. Найдите максимальную сумму непрерывного подмассива по алгоритму Кадане (Kadane's algorithm). Выведите найденную максимальную сумму.",
+    "expected": "6",
+    "starter": "nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]\n# Реализуйте алгоритм Кадане:\n",
+    "hint": "nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]\nmax_so_far = nums[0]\ncurr_max = nums[0]\nfor x in nums[1:]:\n    curr_max = max(x, curr_max + x)\n    max_so_far = max(max_so_far, curr_max)\nprint(max_so_far)",
+    "xp": 30
+  },
+  {
+    "id": "prob-combo-06",
+    "category": "Комплексные основы",
+    "title": "Фильтр анаграмм и уникальных слов",
+    "difficulty": "Medium",
+    "desc": "Дан список слов <code>raw = ['кот', 'ток', 'дом', 'сон', 'нос', 'дом']</code>. Очистите список от прямых дубликатов, а также от анаграмм (оставьте только первое встретившееся слово из группы анаграмм). Выведите итоговый список.",
+    "expected": "['кот', 'дом', 'сон']",
+    "starter": "raw = ['кот', 'ток', 'дом', 'сон', 'нос', 'дом']\n# Отфильтруйте слова, сохранив первое появление:\n",
+    "hint": "raw = ['кот', 'ток', 'дом', 'сон', 'нос', 'дом']\nseen = set()\nres = []\nfor w in raw:\n    sig = ''.join(sorted(w))\n    if sig not in seen:\n        seen.add(sig)\n        res.append(w)\nprint(res)",
+    "xp": 25
+  },
+  {
+    "id": "prob-combo-07",
+    "category": "Комплексные основы",
+    "title": "Сумма элементов диагонали матрицы",
+    "difficulty": "Medium",
+    "desc": "Дана квадратная матрица 3x3: <code>matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]</code>. Вычислите сумму элементов главной и побочной диагоналей (элемент в центре <code>5</code> учитывается только один раз). Выведите результат.",
+    "expected": "25",
+    "starter": "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\n# Вычислите сумму элементов двух диагоналей:\n",
+    "hint": "matrix = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]\nn = len(matrix)\ncoords = set()\nfor i in range(n):\n    coords.add((i, i))\n    coords.add((i, n - 1 - i))\ntotal = sum(matrix[r][c] for r, c in coords)\nprint(total)",
+    "xp": 25
+  },
+  {
+    "id": "prob-combo-08",
+    "category": "Комплексные основы",
+    "title": "Валидатор надежности пароля",
+    "difficulty": "Medium",
+    "desc": "Дана строка <code>pwd = 'P@ssw0rd2026'</code>. Пароль считается надежным, если его длина >= 8, есть хотя бы одна заглавная буква, одна строчная, одна цифра и один спецсимвол из <code>!@#$%^&*</code>. Выведите <code>Надёжный</code> или <code>Слабый</code>.",
+    "expected": "Надёжный",
+    "starter": "pwd = 'P@ssw0rd2026'\n# Проверьте критерии надежности пароля:\n",
+    "hint": "pwd = 'P@ssw0rd2026'\nspecials = set('!@#$%^&*')\nok = (\n    len(pwd) >= 8 and\n    any(c.isupper() for c in pwd) and\n    any(c.islower() for c in pwd) and\n    any(c.isdigit() for c in pwd) and\n    any(c in specials for c in pwd)\n)\nprint('Надёжный' if ok else 'Слабый')",
+    "xp": 25
+  },
+  {
+    "id": "prob-list-06",
+    "category": "Списки и кортежи",
+    "title": "Разбиение списка на чанки фиксированного размера",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел от 1 до 9: <code>lst = list(range(1, 10))</code>. Разбейте его на подсписки (чанки) длиной ровно 3 элемента с помощью генератора списков и срезов: <code>[[1, 2, 3], [4, 5, 6], [7, 8, 9]]</code>. Выведите результат.",
+    "expected": "[[1, 2, 3], [4, 5, 6], [7, 8, 9]]",
+    "starter": "lst = list(range(1, 10))\n# Разбейте список на чанки размером 3:\n",
+    "hint": "lst = list(range(1, 10))\nchunks = [lst[i:i+3] for i in range(0, len(lst), 3)]\nprint(chunks)",
+    "xp": 20
+  },
+  {
+    "id": "prob-dict-05",
+    "category": "Словари и множества",
+    "title": "Слияние словарей с суммированием числовых значений",
+    "difficulty": "Medium",
+    "desc": "Даны два склада с остатками товаров:<br><code>w1 = {'яблоки': 50, 'бананы': 30, 'апельсины': 20}</code><br><code>w2 = {'бананы': 25, 'груши': 40, 'яблоки': 15}</code><br>Объедините остатки в один словарь, суммируя количества одинаковых товаров. Отсортируйте ключи по алфавиту и выведите итоговый словарь.",
+    "expected": "{'апельсины': 20, 'бананы': 55, 'груши': 40, 'яблоки': 65}",
+    "starter": "w1 = {'яблоки': 50, 'бананы': 30, 'апельсины': 20}\nw2 = {'бананы': 25, 'груши': 40, 'яблоки': 15}\n# Объедините склады с суммированием одинаковых ключей:\n",
+    "hint": "w1 = {'яблоки': 50, 'бананы': 30, 'апельсины': 20}\nw2 = {'бананы': 25, 'груши': 40, 'яблоки': 15}\nmerged = dict(w1)\nfor k, v in w2.items():\n    merged[k] = merged.get(k, 0) + v\nsorted_res = {k: merged[k] for k in sorted(merged)}\nprint(sorted_res)",
+    "xp": 20
+  },
+  {
+    "id": "prob-algo-06",
+    "category": "Алгоритмические задачи",
+    "title": "Поиск палиндромной подстроки",
+    "difficulty": "Medium",
+    "desc": "Дана строка <code>s = 'babad'</code>. Найдите самую длинную подстроку-палиндром (при равенстве длин возьмите первую встретившуюся). Выведите её (для 'babad' это 'bab').",
+    "expected": "bab",
+    "starter": "s = 'babad'\n# Найдите самую длинную подстроку-палиндром:\n",
+    "hint": "s = 'babad'\nbest = ''\nfor i in range(len(s)):\n    for j in range(i + 1, len(s) + 1):\n        sub = s[i:j]\n        if sub == sub[::-1] and len(sub) > len(best):\n            best = sub\nprint(best)",
+    "xp": 25
+  },
+  {
+    "id": "prob-str-01",
+    "category": "Ввод и вывод",
+    "title": "Удаление лишних пробелов (strip)",
+    "difficulty": "Easy",
+    "desc": "Дана строка <code>raw = '   hello world\\n\\t  '</code>. Очистите её от начальных и конечных пробельных символов с помощью метода <code>strip()</code> и выведите результат.",
+    "expected": "hello world",
+    "starter": "raw = '   hello world\\n\\t  '\n# Очистите строку от пробелов по краям:\n",
+    "hint": "raw = '   hello world\\n\\t  '\nprint(raw.strip())",
+    "xp": 10
+  },
+  {
+    "id": "prob-str-02",
+    "category": "Ввод и вывод",
+    "title": "Объединение списка слов через дефис (join)",
+    "difficulty": "Easy",
+    "desc": "Дан список слов <code>parts = ['2026', '10', '29']</code>. Объедините их в дату вида <code>2026-10-29</code> с помощью строкового метода <code>'-'.join(...)</code> и выведите результат.",
+    "expected": "2026-10-29",
+    "starter": "parts = ['2026', '10', '29']\n# Объедините список через дефис:\n",
+    "hint": "parts = ['2026', '10', '29']\nprint('-'.join(parts))",
+    "xp": 10
+  },
+  {
+    "id": "prob-str-03",
+    "category": "Ввод и вывод",
+    "title": "Замена подстроки (replace)",
+    "difficulty": "Easy",
+    "desc": "Дана строка <code>msg = 'Java is fast, Java is everywhere'</code>. Замените все вхождения слова <code>Java</code> на <code>Python</code> и выведите новую строку.",
+    "expected": "Python is fast, Python is everywhere",
+    "starter": "msg = 'Java is fast, Java is everywhere'\n# Замените Java на Python:\n",
+    "hint": "msg = 'Java is fast, Java is everywhere'\nprint(msg.replace('Java', 'Python'))",
+    "xp": 10
+  },
+  {
+    "id": "prob-str-04",
+    "category": "Ввод и вывод",
+    "title": "Подсчёт вхождений символа (count)",
+    "difficulty": "Easy",
+    "desc": "Дана строка <code>dna = 'AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGC'</code>. Подсчитайте количество нуклеотидов <code>A</code> в этой последовательности и выведите число.",
+    "expected": "20",
+    "starter": "dna = 'AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGC'\n# Подсчитайте количество 'A':\n",
+    "hint": "dna = 'AGCTTTTCATTCTGACTGCAACGGGCAATATGTCTCTGTGTGGATTAAAAAAAGAGTGTCTGATAGCAGC'\nprint(dna.count('A'))",
+    "xp": 10
+  },
+  {
+    "id": "prob-str-05",
+    "category": "Ввод и вывод",
+    "title": "Регистр заголовка (title & capitalize)",
+    "difficulty": "Easy",
+    "desc": "Дана строка <code>title = 'deep learning with python'</code>. Приведите каждое слово к заглавной букве с помощью метода <code>title()</code> и выведите результат.",
+    "expected": "Deep Learning With Python",
+    "starter": "title = 'deep learning with python'\n# Преобразуйте к регистру заголовка:\n",
+    "hint": "title = 'deep learning with python'\nprint(title.title())",
+    "xp": 10
+  },
+  {
+    "id": "prob-str-06",
+    "category": "Ввод и вывод",
+    "title": "Срез каждого второго символа",
+    "difficulty": "Easy",
+    "desc": "Дана строка <code>s = 'P*y*t*h*o*n*3'</code>. Извлеките с помощью шага среза <code>[::2]</code> только буквы без звёздочек и выведите результат.",
+    "expected": "Python3",
+    "starter": "s = 'P*y*t*h*o*n*3'\n# Получите срез с шагом 2:\n",
+    "hint": "s = 'P*y*t*h*o*n*3'\nprint(s[::2])",
+    "xp": 10
+  },
+  {
+    "id": "prob-str-07",
+    "category": "Ввод и вывод",
+    "title": "Форматирование денежной суммы с разделителем тысяч",
+    "difficulty": "Medium",
+    "desc": "Дано целое число <code>amount = 1250000000</code>. Выведите его в f-строке с разделителем тысяч в виде нижнего подчеркивания: <code>Баланс: 1_250_000_000 руб.</code>",
+    "expected": "Баланс: 1_250_000_000 руб.",
+    "starter": "amount = 1250000000\n# Отформатируйте число с разделителем тысяч _:\n",
+    "hint": "amount = 1250000000\nprint(f'Баланс: {amount:_} руб.')",
+    "xp": 15
+  },
+  {
+    "id": "prob-num-06",
+    "category": "Числа и арифметика",
+    "title": "Степень двойки через побитовый сдвиг",
+    "difficulty": "Easy",
+    "desc": "Вычислите $2^{10}$ с помощью оператора побитового сдвига влево <code>1 << 10</code> и выведите результат.",
+    "expected": "1024",
+    "starter": "# Вычислите 2^10 сдвигом бит:\n",
+    "hint": "print(1 << 10)",
+    "xp": 10
+  },
+  {
+    "id": "prob-num-07",
+    "category": "Числа и арифметика",
+    "title": "Модуль разности без встроенного abs()",
+    "difficulty": "Easy",
+    "desc": "Даны числа <code>a = 15</code> и <code>b = 40</code>. Найдите расстояние между ними (абсолютную разность), не используя встроенную функцию <code>abs()</code>. Используйте тернарный оператор или условия.",
+    "expected": "25",
+    "starter": "a, b = 15, 40\n# Найдите |a - b| без abs():\n",
+    "hint": "a, b = 15, 40\ndiff = a - b if a >= b else b - a\nprint(diff)",
+    "xp": 10
+  },
+  {
+    "id": "prob-num-08",
+    "category": "Числа и арифметика",
+    "title": "Конвертер градусов Цельсия в Фаренгейты",
+    "difficulty": "Easy",
+    "desc": "Дана температура в градусах Цельсия <code>celsius = 25</code>. Формула перевода в Фаренгейты: $F = C \\times 1.8 + 32$. Вычислите и выведите температуру в Фаренгейтах целым числом.",
+    "expected": "77",
+    "starter": "celsius = 25\n# Переведите в Фаренгейты:\n",
+    "hint": "celsius = 25\nfahr = int(celsius * 1.8 + 32)\nprint(fahr)",
+    "xp": 10
+  },
+  {
+    "id": "prob-num-09",
+    "category": "Числа и арифметика",
+    "title": "Площадь круга по радиусу",
+    "difficulty": "Easy",
+    "desc": "Дан радиус круга <code>r = 7</code>. Приняв $\\pi = 3.14159$, вычислите площадь круга ($S = \\pi r^2$) и выведите её, округлив до 2 знаков после запятой.",
+    "expected": "153.94",
+    "starter": "r = 7\npi = 3.14159\n# Вычислите площадь с округлением до 2 знаков:\n",
+    "hint": "r = 7\npi = 3.14159\narea = round(pi * (r ** 2), 2)\nprint(area)",
+    "xp": 10
+  },
+  {
+    "id": "prob-num-10",
+    "category": "Числа и арифметика",
+    "title": "Сумма цифр произвольного натурального числа",
+    "difficulty": "Medium",
+    "desc": "Дано число <code>num = 948271</code>. Посчитайте сумму всех его цифр с помощью генератора и функции <code>sum()</code>. Выведите полученную сумму.",
+    "expected": "31",
+    "starter": "num = 948271\n# Посчитайте сумму цифр:\n",
+    "hint": "num = 948271\nprint(sum(int(d) for d in str(num)))",
+    "xp": 15
+  },
+  {
+    "id": "prob-cond-06",
+    "category": "Условия и логика",
+    "title": "Проверка принадлежности диапазону (Цепные сравнения)",
+    "difficulty": "Easy",
+    "desc": "Дано значение <code>x = 45</code>. С помощью цепного сравнения Python <code>a <= x <= b</code> проверьте, попадает ли число в интервал от 10 до 50 включительно. Выведите <code>Попадает</code> или <code>Вне диапазона</code>.",
+    "expected": "Попадает",
+    "starter": "x = 45\n# Проверьте 10 <= x <= 50:\n",
+    "hint": "x = 45\nprint('Попадает' if 10 <= x <= 50 else 'Вне диапазона')",
+    "xp": 10
+  },
+  {
+    "id": "prob-cond-07",
+    "category": "Условия и логика",
+    "title": "Существование треугольника",
+    "difficulty": "Easy",
+    "desc": "Даны длины трёх отрезков: <code>a = 7</code>, <code>b = 10</code>, <code>c = 5</code>. Треугольник существует тогда и только тогда, когда сумма любых двух его сторон строго больше третьей. Выведите <code>Существует</code> или <code>Не существует</code>.",
+    "expected": "Существует",
+    "starter": "a, b, c = 7, 10, 5\n# Проверьте неравенство треугольника:\n",
+    "hint": "a, b, c = 7, 10, 5\nok = (a + b > c) and (a + c > b) and (b + c > a)\nprint('Существует' if ok else 'Не существует')",
+    "xp": 15
+  },
+  {
+    "id": "prob-cond-08",
+    "category": "Условия и логика",
+    "title": "Определение четверти координатной плоскости",
+    "difficulty": "Medium",
+    "desc": "Даны координаты точки: <code>x = -4</code>, <code>y = 7</code>. Определите номер координатной четверти (I, II, III или IV) с помощью условий и выведите строку <code>Четверть: II</code>.",
+    "expected": "Четверть: II",
+    "starter": "x, y = -4, 7\n# Определите четверть:\n",
+    "hint": "x, y = -4, 7\nif x > 0 and y > 0: q = 'I'\nelif x < 0 and y > 0: q = 'II'\nelif x < 0 and y < 0: q = 'III'\nelse: q = 'IV'\nprint(f'Четверть: {q}')",
+    "xp": 15
+  },
+  {
+    "id": "prob-cond-09",
+    "category": "Условия и логика",
+    "title": "Расчёт стоимости доставки со скидкой",
+    "difficulty": "Medium",
+    "desc": "Дана стоимость заказа <code>order = 3200</code>. Если заказ от 3000 руб — доставка бесплатная (<code>0 руб</code>). Если от 1000 до 2999 руб — доставка <code>250 руб</code>. Если меньше 1000 руб — доставка <code>400 руб</code>. Выведите строку: <code>Доставка: X руб</code>.",
+    "expected": "Доставка: 0 руб",
+    "starter": "order = 3200\n# Определите стоимость доставки:\n",
+    "hint": "order = 3200\nif order >= 3000: cost = 0\nelif order >= 1000: cost = 250\nelse: cost = 400\nprint(f'Доставка: {cost} руб')",
+    "xp": 15
+  },
+  {
+    "id": "prob-cond-10",
+    "category": "Условия и логика",
+    "title": "Pattern Matching по типу объекта",
+    "difficulty": "Medium",
+    "desc": "Дана переменная <code>val = [10, 20, 30]</code>. Используя оператор <code>match val:</code> сопоставьте тип: если список <code>case list(): 'Список'</code>, если словарь <code>case dict(): 'Словарь'</code>, если число <code>case int() | float(): 'Число'</code>. Выведите название типа.",
+    "expected": "Список",
+    "starter": "val = [10, 20, 30]\n# Используйте match val:\n",
+    "hint": "val = [10, 20, 30]\nmatch val:\n    case list(): print('Список')\n    case dict(): print('Словарь')\n    case int() | float(): print('Число')\n    case _: print('Другой')",
+    "xp": 20
+  },
+  {
+    "id": "prob-loop-06",
+    "category": "Циклы и итерации",
+    "title": "Обратный отсчёт (countdown)",
+    "difficulty": "Easy",
+    "desc": "Выведите числа от 5 до 1 в обратном порядке через пробел с помощью <code>range(5, 0, -1)</code>, а в конце добавьте восклицательный знак (<code>5 4 3 2 1!</code>).",
+    "expected": "5 4 3 2 1!",
+    "starter": "# Выведите обратный отсчет:\n",
+    "hint": "nums = ' '.join(str(i) for i in range(5, 0, -1))\nprint(nums + '!')",
+    "xp": 10
+  },
+  {
+    "id": "prob-loop-07",
+    "category": "Циклы и итерации",
+    "title": "Индекс и значение через enumerate",
+    "difficulty": "Easy",
+    "desc": "Дан список языков: <code>langs = ['Python', 'Rust', 'Go']</code>. Выведите каждый элемент с его 1-индексированным номером в формате: <code>1: Python</code>, <code>2: Rust</code>, <code>3: Go</code> (каждый на новой строке), используя <code>enumerate(langs, 1)</code>.",
+    "expected": "1: Python\n2: Rust\n3: Go",
+    "starter": "langs = ['Python', 'Rust', 'Go']\n# Выведите через enumerate:\n",
+    "hint": "langs = ['Python', 'Rust', 'Go']\nfor idx, lang in enumerate(langs, 1):\n    print(f'{idx}: {lang}')",
+    "xp": 10
+  },
+  {
+    "id": "prob-loop-08",
+    "category": "Циклы и итерации",
+    "title": "Параллельная итерация с zip",
+    "difficulty": "Easy",
+    "desc": "Даны списки пользователей <code>users = ['Alice', 'Bob', 'Charlie']</code> и их баллы <code>scores = [95, 88, 92]</code>. С помощью <code>zip()</code> выведите строки вида <code>Alice: 95</code> и т.д.",
+    "expected": "Alice: 95\nBob: 88\nCharlie: 92",
+    "starter": "users = ['Alice', 'Bob', 'Charlie']\nscores = [95, 88, 92]\n# Выведите пары имя: балл через zip:\n",
+    "hint": "users = ['Alice', 'Bob', 'Charlie']\nscores = [95, 88, 92]\nfor u, s in zip(users, scores):\n    print(f'{u}: {s}')",
+    "xp": 15
+  },
+  {
+    "id": "prob-loop-09",
+    "category": "Циклы и итерации",
+    "title": "Первая степень тройки больше 1000",
+    "difficulty": "Medium",
+    "desc": "С помощью цикла <code>while</code> найдите наименьшую степень числа 3 ($3^k$), которая строго больше 1000. Выведите найденное число.",
+    "expected": "2187",
+    "starter": "# Найдите первую степень тройки > 1000:\n",
+    "hint": "val = 1\nwhile val <= 1000:\n    val *= 3\nprint(val)",
+    "xp": 15
+  },
+  {
+    "id": "prob-loop-10",
+    "category": "Циклы и итерации",
+    "title": "Вложенные циклы: Пирамида из звёздочек",
+    "difficulty": "Medium",
+    "desc": "С помощью цикла выведите прямоугольный треугольник из звёздочек высотой 4 строки (1 звёздочка на 1 строке, 2 на второй, 3 на третьей, 4 на четвёртой).",
+    "expected": "*\n**\n***\n****",
+    "starter": "# Выведите треугольник из звёздочек:\n",
+    "hint": "for i in range(1, 5):\n    print('*' * i)",
+    "xp": 15
+  },
+  {
+    "id": "prob-combo-09",
+    "category": "Комплексные основы",
+    "title": "Фильтрация чётных чисел и возведение в куб",
+    "difficulty": "Easy",
+    "desc": "Дан список чисел <code>nums = [1, 2, 3, 4, 5, 6]</code>. Отберите только чётные числа, возведите каждое в куб ($x^3$) и выведите полученный список.",
+    "expected": "[8, 64, 216]",
+    "starter": "nums = [1, 2, 3, 4, 5, 6]\n# Отберите четные и возведите в куб:\n",
+    "hint": "nums = [1, 2, 3, 4, 5, 6]\nprint([x**3 for x in nums if x % 2 == 0])",
+    "xp": 15
+  },
+  {
+    "id": "prob-combo-10",
+    "category": "Комплексные основы",
+    "title": "Подсчёт суммы положительных и количества отрицательных",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел <code>data = [12, -7, 5, -3, 0, 18, -9, 4]</code>. Вычислите сумму всех положительных чисел ($> 0$) и количество отрицательных ($< 0$). Выведите в формате: <code>Сумма: 39, Отрицательных: 3</code>.",
+    "expected": "Сумма: 39, Отрицательных: 3",
+    "starter": "data = [12, -7, 5, -3, 0, 18, -9, 4]\n# Посчитайте сумму положительных и число отрицательных:\n",
+    "hint": "data = [12, -7, 5, -3, 0, 18, -9, 4]\npos_sum = sum(x for x in data if x > 0)\nneg_cnt = sum(1 for x in data if x < 0)\nprint(f'Сумма: {pos_sum}, Отрицательных: {neg_cnt}')",
+    "xp": 20
+  },
+  {
+    "id": "prob-combo-11",
+    "category": "Комплексные основы",
+    "title": "Парсер строки запроса (Query String to Dict)",
+    "difficulty": "Medium",
+    "desc": "Дана строка URL-параметров: <code>query = 'lang=python&level=senior&mode=dark'</code>. Разберите её на пары ключ-значение и сформируйте словарь. Выведите полученный словарь.",
+    "expected": "{'lang': 'python', 'level': 'senior', 'mode': 'dark'}",
+    "starter": "query = 'lang=python&level=senior&mode=dark'\n# Преобразуйте query string в словарь:\n",
+    "hint": "query = 'lang=python&level=senior&mode=dark'\nparams = dict(part.split('=') for part in query.split('&'))\nprint(params)",
+    "xp": 20
+  },
+  {
+    "id": "prob-combo-12",
+    "category": "Комплексные основы",
+    "title": "Валидация IPv4 адреса",
+    "difficulty": "Hard",
+    "desc": "Дана строка <code>ip = '192.168.1.1'</code>. Проверьте, является ли она корректным IPv4-адресом (ровно 4 октета, разделенных точкой, каждый октет — число от 0 до 255 без ведущих нулей кроме '0'). Выведите <code>Valid IPv4</code> или <code>Invalid</code>.",
+    "expected": "Valid IPv4",
+    "starter": "ip = '192.168.1.1'\n# Проверьте корректность IPv4:\n",
+    "hint": "ip = '192.168.1.1'\nparts = ip.split('.')\ndef check(p):\n    return p.isdigit() and (p == '0' or not p.startswith('0')) and 0 <= int(p) <= 255\nok = len(parts) == 4 and all(check(p) for p in parts)\nprint('Valid IPv4' if ok else 'Invalid')",
+    "xp": 25
+  },
+  {
+    "id": "prob-list-07",
+    "category": "Списки и кортежи",
+    "title": "Сплющивание вложенного списка (Flatten List)",
+    "difficulty": "Medium",
+    "desc": "Дан двумерный список: <code>nested = [[1, 2], [3, 4], [5, 6, 7]]</code>. Сплющите его в плоский одномерный список с помощью генератора списков и выведите результат.",
+    "expected": "[1, 2, 3, 4, 5, 6, 7]",
+    "starter": "nested = [[1, 2], [3, 4], [5, 6, 7]]\n# Преобразуйте в одномерный список:\n",
+    "hint": "nested = [[1, 2], [3, 4], [5, 6, 7]]\nflat = [x for sub in nested for x in sub]\nprint(flat)",
+    "xp": 20
+  },
+  {
+    "id": "prob-list-08",
+    "category": "Списки и кортежи",
+    "title": "Сортировка кортежей по второму элементу",
+    "difficulty": "Medium",
+    "desc": "Дан список кортежей с сотрудниками и их стажем: <code>staff = [('Анна', 4), ('Иван', 1), ('Мария', 7), ('Олег', 3)]</code>. Отсортируйте список по стажу (второму элементу) по возрастанию с помощью <code>key=lambda x: x[1]</code>. Выведите отсортированный список.",
+    "expected": "[('Иван', 1), ('Олег', 3), ('Анна', 4), ('Мария', 7)]",
+    "starter": "staff = [('Анна', 4), ('Иван', 1), ('Мария', 7), ('Олег', 3)]\n# Отсортируйте по стажу:\n",
+    "hint": "staff = [('Анна', 4), ('Иван', 1), ('Мария', 7), ('Олег', 3)]\nstaff.sort(key=lambda x: x[1])\nprint(staff)",
+    "xp": 20
+  },
+  {
+    "id": "prob-list-09",
+    "category": "Списки и кортежи",
+    "title": "Поиск пересечения нескольких списков",
+    "difficulty": "Medium",
+    "desc": "Даны три списка: <code>a = [1, 2, 3, 4, 5]</code>, <code>b = [2, 4, 6, 8]</code>, <code>c = [2, 3, 4, 9]</code>. Найдите элементы, которые присутствуют во всех трёх списках одновременно, отсортируйте их и выведите список.",
+    "expected": "[2, 4]",
+    "starter": "a = [1, 2, 3, 4, 5]\nb = [2, 4, 6, 8]\nc = [2, 3, 4, 9]\n# Найдите общее пересечение трёх списков:\n",
+    "hint": "a = [1, 2, 3, 4, 5]\nb = [2, 4, 6, 8]\nc = [2, 3, 4, 9]\nres = sorted(set(a) & set(b) & set(c))\nprint(res)",
+    "xp": 15
+  },
+  {
+    "id": "prob-list-10",
+    "category": "Списки и кортежи",
+    "title": "Перемещение всех нулей в конец списка",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел <code>nums = [0, 1, 0, 3, 12, 0, 5]</code>. Переместите все нули в конец списка, сохранив относительный порядок ненулевых элементов. Выведите измененный список.",
+    "expected": "[1, 3, 12, 5, 0, 0, 0]",
+    "starter": "nums = [0, 1, 0, 3, 12, 0, 5]\n# Переместите нули в конец списка:\n",
+    "hint": "nums = [0, 1, 0, 3, 12, 0, 5]\nnon_zeros = [x for x in nums if x != 0]\nzeros = [0] * (len(nums) - len(non_zeros))\nprint(non_zeros + zeros)",
+    "xp": 20
+  },
+  {
+    "id": "prob-dict-06",
+    "category": "Словари и множества",
+    "title": "Сортировка словаря по значениям (Descending)",
+    "difficulty": "Medium",
+    "desc": "Дан словарь результатов игроков: <code>scores = {'Tom': 45, 'Jerry': 89, 'Spike': 72}</code>. Отсортируйте словарь по баллам (значениям) по убыванию. Выведите новый отсортированный словарь.",
+    "expected": "{'Jerry': 89, 'Spike': 72, 'Tom': 45}",
+    "starter": "scores = {'Tom': 45, 'Jerry': 89, 'Spike': 72}\n# Отсортируйте словарь по значениям по убыванию:\n",
+    "hint": "scores = {'Tom': 45, 'Jerry': 89, 'Spike': 72}\nsorted_scores = dict(sorted(scores.items(), key=lambda item: item[1], reverse=True))\nprint(sorted_scores)",
+    "xp": 20
+  },
+  {
+    "id": "prob-dict-07",
+    "category": "Словари и множества",
+    "title": "Объединение словарей оператором | (Python 3.9+)",
+    "difficulty": "Easy",
+    "desc": "Даны два словаря с настройками: <code>defaults = {'theme': 'dark', 'font': 'Mono', 'size': 14}</code> и <code>overrides = {'size': 16, 'show_lines': True}</code>. Объедините их с помощью оператора <code>|</code> так, чтобы переопределения имели приоритет. Выведите результат.",
+    "expected": "{'theme': 'dark', 'font': 'Mono', 'size': 16, 'show_lines': True}",
+    "starter": "defaults = {'theme': 'dark', 'font': 'Mono', 'size': 14}\noverrides = {'size': 16, 'show_lines': True}\n# Объедините словари оператором |:\n",
+    "hint": "defaults = {'theme': 'dark', 'font': 'Mono', 'size': 14}\noverrides = {'size': 16, 'show_lines': True}\nprint(defaults | overrides)",
+    "xp": 10
+  },
+  {
+    "id": "prob-dict-08",
+    "category": "Словари и множества",
+    "title": "Поиск самого частого элемента (Mode)",
+    "difficulty": "Medium",
+    "desc": "Дан список оценок: <code>grades = [5, 4, 3, 5, 4, 5, 2, 5, 4]</code>. Найдите наиболее часто встречающееся число, используя метод <code>Counter.most_common(1)</code>. Выведите только само число.",
+    "expected": "5",
+    "starter": "grades = [5, 4, 3, 5, 4, 5, 2, 5, 4]\n# Найдите моду ряда через Counter:\n",
+    "hint": "from collections import Counter\ngrades = [5, 4, 3, 5, 4, 5, 2, 5, 4]\nmode = Counter(grades).most_common(1)[0][0]\nprint(mode)",
+    "xp": 15
+  },
+  {
+    "id": "prob-dict-09",
+    "category": "Словари и множества",
+    "title": "Симметрическая разность множеств (Symmetric Difference)",
+    "difficulty": "Easy",
+    "desc": "Даны два множества ID: <code>group_a = {1, 2, 3, 4}</code> и <code>group_b = {3, 4, 5, 6}</code>. Найдите симметрическую разность (элементы, которые есть либо только в A, либо только в B, оператор <code>^</code>). Отсортируйте и выведите результат списком.",
+    "expected": "[1, 2, 5, 6]",
+    "starter": "group_a = {1, 2, 3, 4}\ngroup_b = {3, 4, 5, 6}\n# Найдите элементы, входящие только в одно из множеств:\n",
+    "hint": "group_a = {1, 2, 3, 4}\ngroup_b = {3, 4, 5, 6}\nprint(sorted(group_a ^ group_b))",
+    "xp": 15
+  },
+  {
+    "id": "prob-fn-06",
+    "category": "Функции и алгоритмы",
+    "title": "Рекурсивный подсчёт факториала",
+    "difficulty": "Easy",
+    "desc": "Напишите рекурсивную функцию <code>fact(n)</code> (базовый случай $n \\le 1 \\rightarrow 1$). Вычислите и выведите <code>fact(5)</code>.",
+    "expected": "120",
+    "starter": "# Напишите рекурсивную функцию fact(n):\n\n# Выведите fact(5):\n",
+    "hint": "def fact(n):\n    return 1 if n <= 1 else n * fact(n - 1)\n\nprint(fact(5))",
+    "xp": 15
+  },
+  {
+    "id": "prob-fn-07",
+    "category": "Функции и алгоритмы",
+    "title": "Замыкание: Генератор множителя (Closure)",
+    "difficulty": "Medium",
+    "desc": "Напишите функцию <code>make_multiplier(k)</code>, которая возвращает функцию, умножающую переданный ей аргумент на <code>k</code>. Создайте функцию <code>triple = make_multiplier(3)</code>, вызовите <code>triple(14)</code> и выведите результат.",
+    "expected": "42",
+    "starter": "# Реализуйте замыкание make_multiplier(k):\n\n# Проверьте с k=3 и x=14:\n",
+    "hint": "def make_multiplier(k):\n    return lambda x: x * k\n\ntriple = make_multiplier(3)\nprint(triple(14))",
+    "xp": 20
+  },
+  {
+    "id": "prob-fn-08",
+    "category": "Функции и алгоритмы",
+    "title": "Функция map() и lambda",
+    "difficulty": "Easy",
+    "desc": "Дан список длин сторон квадратов: <code>sides = [2, 5, 8, 10]</code>. С помощью встроенной функции <code>map()</code> и <code>lambda</code> вычислите площади этих квадратов ($side^2$). Выведите результат в виде списка.",
+    "expected": "[4, 25, 64, 100]",
+    "starter": "sides = [2, 5, 8, 10]\n# Вычислите площади через map и lambda:\n",
+    "hint": "sides = [2, 5, 8, 10]\nprint(list(map(lambda s: s**2, sides)))",
+    "xp": 10
+  },
+  {
+    "id": "prob-fn-09",
+    "category": "Функции и алгоритмы",
+    "title": "Кастомная сортировка по длине строк, затем по алфавиту",
+    "difficulty": "Medium",
+    "desc": "Дан список слов: <code>words = ['apple', 'pie', 'banana', 'fig', 'pear', 'kiwi']</code>. Отсортируйте слова сначала по возрастанию длины, а слова одинаковой длины — по алфавиту, используя ключ <code>key=lambda w: (len(w), w)</code>. Выведите результат.",
+    "expected": "['fig', 'pie', 'kiwi', 'pear', 'apple', 'banana']",
+    "starter": "words = ['apple', 'pie', 'banana', 'fig', 'pear', 'kiwi']\n# Отсортируйте по длине, затем по алфавиту:\n",
+    "hint": "words = ['apple', 'pie', 'banana', 'fig', 'pear', 'kiwi']\nprint(sorted(words, key=lambda w: (len(w), w)))",
+    "xp": 20
+  },
+  {
+    "id": "prob-fn-10",
+    "category": "Функции и алгоритмы",
+    "title": "Декоратор измерения времени вызова (эмуляция)",
+    "difficulty": "Medium",
+    "desc": "Напишите декоратор <code>counted</code>, который при вызове функции выводит префикс <code>[LOG] Вызвана функция: square</code> перед её исполнением. Декорируйте функцию <code>def square(x): return x * x</code> и вызовите её с аргументом <code>9</code>. Выведите возвращённый результат.",
+    "expected": "[LOG] Вызвана функция: square\n81",
+    "starter": "# Напишите декоратор counted:\n\n# Декорируйте и вызовите square(9):\n",
+    "hint": "def counted(fn):\n    def wrapper(*args, **kwargs):\n        print(f'[LOG] Вызвана функция: {fn.__name__}')\n        return fn(*args, **kwargs)\n    return wrapper\n\n@counted\ndef square(x):\n    return x * x\n\nprint(square(9))",
+    "xp": 25
+  },
+  {
+    "id": "prob-algo-07",
+    "category": "Алгоритмические задачи",
+    "title": "Сортировка выбором (Selection Sort)",
+    "difficulty": "Medium",
+    "desc": "Дан неотсортированный список: <code>arr = [29, 10, 14, 37, 13]</code>. Реализуйте алгоритм сортировки выбором (Selection Sort) на месте (in-place) и выведите отсортированный список.",
+    "expected": "[10, 13, 14, 29, 37]",
+    "starter": "arr = [29, 10, 14, 37, 13]\n# Отсортируйте список сортировкой выбором:\n",
+    "hint": "arr = [29, 10, 14, 37, 13]\nn = len(arr)\nfor i in range(n):\n    min_idx = i\n    for j in range(i + 1, n):\n        if arr[j] < arr[min_idx]:\n            min_idx = j\n    arr[i], arr[min_idx] = arr[min_idx], arr[i]\nprint(arr)",
+    "xp": 20
+  },
+  {
+    "id": "prob-algo-08",
+    "category": "Алгоритмические задачи",
+    "title": "Линейный поиск с барьером",
+    "difficulty": "Easy",
+    "desc": "Дан список <code>data = [15, 32, 47, 89, 21, 56]</code> и целевое значение <code>target = 89</code>. Найдите 0-индексированную позицию числа <code>89</code> и выведите её.",
+    "expected": "3",
+    "starter": "data = [15, 32, 47, 89, 21, 56]\ntarget = 89\n# Найдите индекс числа 89:\n",
+    "hint": "data = [15, 32, 47, 89, 21, 56]\ntarget = 89\nprint(data.index(target))",
+    "xp": 10
+  },
+  {
+    "id": "prob-algo-09",
+    "category": "Алгоритмические задачи",
+    "title": "Слияние перекрывающихся интервалов",
+    "difficulty": "Hard",
+    "desc": "Дан список интервалов: <code>intervals = [[1, 3], [2, 6], [8, 10], [15, 18]]</code>. Объедините все перекрывающиеся интервалы в один: <code>[1, 3]</code> и <code>[2, 6]</code> объединяются в <code>[1, 6]</code>. Выведите список объединённых интервалов.",
+    "expected": "[[1, 6], [8, 10], [15, 18]]",
+    "starter": "intervals = [[1, 3], [2, 6], [8, 10], [15, 18]]\n# Объедините пересекающиеся интервалы:\n",
+    "hint": "intervals = [[1, 3], [2, 6], [8, 10], [15, 18]]\nintervals.sort(key=lambda x: x[0])\nmerged = [intervals[0]]\nfor current in intervals[1:]:\n    prev = merged[-1]\n    if current[0] <= prev[1]:\n        prev[1] = max(prev[1], current[1])\n    else:\n        merged.append(current)\nprint(merged)",
+    "xp": 30
+  },
+  {
+    "id": "prob-algo-10",
+    "category": "Алгоритмические задачи",
+    "title": "Очередь с приоритетом (heapq)",
+    "difficulty": "Medium",
+    "desc": "Дан список задач с приоритетами: <code>tasks = [(3, 'Тесты'), (1, 'Критический баг'), (2, 'Рефакторинг')]</code>. С помощью модуля <code>heapq</code> извлеките самую приоритетную задачу (с наименьшим числом приоритета) через <code>heappop()</code>. Выведите имя этой задачи.",
+    "expected": "Критический баг",
+    "starter": "import heapq\ntasks = [(3, 'Тесты'), (1, 'Критический баг'), (2, 'Рефакторинг')]\n# Извлеките задачу с наивысшим приоритетом через heapq:\n",
+    "hint": "import heapq\ntasks = [(3, 'Тесты'), (1, 'Критический баг'), (2, 'Рефакторинг')]\nheapq.heapify(tasks)\npriority, task_name = heapq.heappop(tasks)\nprint(task_name)",
+    "xp": 20
+  },
+  {
+    "id": "prob-algo-11",
+    "category": "Алгоритмические задачи",
+    "title": "Поиск единственного неповторяющегося числа (XOR trick)",
+    "difficulty": "Medium",
+    "desc": "Дан список, где каждое число встречается ровно дважды, кроме одного: <code>nums = [4, 1, 2, 1, 2]</code>. Найдите это уникальное число с помощью побитового исключающего ИЛИ (<code>^</code>) за $O(n)$ времени и $O(1)$ памяти. Выведите результат.",
+    "expected": "4",
+    "starter": "nums = [4, 1, 2, 1, 2]\n# Найдите уникальное число через XOR:\n",
+    "hint": "nums = [4, 1, 2, 1, 2]\nres = 0\nfor x in nums:\n    res ^= x\nprint(res)",
+    "xp": 20
+  },
+  {
+    "id": "prob-algo-12",
+    "category": "Алгоритмические задачи",
+    "title": "Сортировка подсчётом (Counting Sort)",
+    "difficulty": "Medium",
+    "desc": "Дан список целых чисел в диапазоне от 0 до 5: <code>arr = [4, 2, 2, 5, 3, 3, 1]</code>. Отсортируйте его алгоритмом сортировки подсчётом за $O(n + k)$ и выведите отсортированный список.",
+    "expected": "[1, 2, 2, 3, 3, 4, 5]",
+    "starter": "arr = [4, 2, 2, 5, 3, 3, 1]\n# Отсортируйте подсчетом:\n",
+    "hint": "arr = [4, 2, 2, 5, 3, 3, 1]\ncounts = [0] * (max(arr) + 1)\nfor x in arr: counts[x] += 1\nsorted_arr = []\nfor num, count in enumerate(counts):\n    sorted_arr.extend([num] * count)\nprint(sorted_arr)",
+    "xp": 25
+  },
+  {
+    "id": "prob-str-08",
+    "category": "Ввод и вывод",
+    "title": "Проверка окончания файла (endswith)",
+    "difficulty": "Easy",
+    "desc": "Дано имя файла <code>filename = 'report_2026.pdf'</code>. Проверьте с помощью метода <code>endswith('.pdf')</code>, является ли файл документом PDF. Выведите <code>PDF</code> или <code>Другой</code>.",
+    "expected": "PDF",
+    "starter": "filename = 'report_2026.pdf'\n# Проверьте расширение .pdf:\n",
+    "hint": "filename = 'report_2026.pdf'\nprint('PDF' if filename.endswith('.pdf') else 'Другой')",
+    "xp": 10
+  },
+  {
+    "id": "prob-num-11",
+    "category": "Числа и арифметика",
+    "title": "Проверка четности суммы списка",
+    "difficulty": "Easy",
+    "desc": "Дан список чисел <code>nums = [4, 7, 2, 9, 8]</code>. Найдите их сумму и проверьте, является ли сумма чётной. Выведите <code>Чётная</code> или <code>Нечётная</code>.",
+    "expected": "Чётная",
+    "starter": "nums = [4, 7, 2, 9, 8]\n# Проверьте четность суммы:\n",
+    "hint": "nums = [4, 7, 2, 9, 8]\nprint('Чётная' if sum(nums) % 2 == 0 else 'Нечётная')",
+    "xp": 10
+  },
+  {
+    "id": "prob-cond-11",
+    "category": "Условия и логика",
+    "title": "Оценка по шкале ECTS",
+    "difficulty": "Easy",
+    "desc": "Даны баллы студента <code>score = 87</code>. Если $\\ge 90$: <code>A</code>, $80..89$: <code>B</code>, $70..79$: <code>C</code>, иначе <code>F</code>. Выведите оценку.",
+    "expected": "B",
+    "starter": "score = 87\n# Определите оценку ECTS:\n",
+    "hint": "score = 87\nif score >= 90: g = 'A'\nelif score >= 80: g = 'B'\nelif score >= 70: g = 'C'\nelse: g = 'F'\nprint(g)",
+    "xp": 10
+  },
+  {
+    "id": "prob-loop-11",
+    "category": "Циклы и итерации",
+    "title": "Сумма геометрической прогрессии",
+    "difficulty": "Medium",
+    "desc": "Найдите сумму первых 6 членов геометрической прогрессии с первым членом $b_1 = 2$ и знаменателем $q = 3$ ($2 + 6 + 18 + 54 + 162 + 486$) с помощью цикла. Выведите сумму.",
+    "expected": "728",
+    "starter": "# Вычислите сумму геометрической прогрессии:\n",
+    "hint": "total = 0\ncurr = 2\nfor _ in range(6):\n    total += curr\n    curr *= 3\nprint(total)",
+    "xp": 15
+  },
+  {
+    "id": "prob-combo-13",
+    "category": "Комплексные основы",
+    "title": "Подсчёт гласных букв в каждом слове",
+    "difficulty": "Medium",
+    "desc": "Дана строка <code>sentence = 'python is great'</code>. Для каждого слова посчитайте количество гласных латинских букв (a, e, i, o, u, y). Выведите словарь вида <code>слово: количество</code>.",
+    "expected": "{'python': 2, 'is': 1, 'great': 2}",
+    "starter": "sentence = 'python is great'\n# Сформируйте словарь подсчета гласных по словам:\n",
+    "hint": "sentence = 'python is great'\nvowels = set('aeiouy')\nres = {w: sum(1 for ch in w.lower() if ch in vowels) for w in sentence.split()}\nprint(res)",
+    "xp": 20
+  },
+  {
+    "id": "prob-list-11",
+    "category": "Списки и кортежи",
+    "title": "Кумулятивная сумма списка (Running Sum)",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел <code>nums = [1, 2, 3, 4]</code>. Постройте список кумулятивных сумм: <code>[1, 1+2, 1+2+3, 1+2+3+4]</code> $\\rightarrow$ <code>[1, 3, 6, 10]</code>. Выведите результат.",
+    "expected": "[1, 3, 6, 10]",
+    "starter": "nums = [1, 2, 3, 4]\n# Постройте список кумулятивных сумм:\n",
+    "hint": "nums = [1, 2, 3, 4]\nres = []\ntotal = 0\nfor x in nums:\n    total += x\n    res.append(total)\nprint(res)",
+    "xp": 15
+  },
+  {
+    "id": "prob-dict-10",
+    "category": "Словари и множества",
+    "title": "Группировка элементов по остатку деления",
+    "difficulty": "Medium",
+    "desc": "Дан список чисел <code>numbers = [10, 11, 12, 13, 14, 15]</code>. Сгруппируйте их в словарь по остатку от деления на 3 (ключи 0, 1, 2). Выведите словарь.",
+    "expected": "{1: [10, 13], 2: [11, 14], 0: [12, 15]}",
+    "starter": "numbers = [10, 11, 12, 13, 14, 15]\n# Сгруппируйте числа по mod 3:\n",
+    "hint": "numbers = [10, 11, 12, 13, 14, 15]\nfrom collections import defaultdict\ngroups = defaultdict(list)\nfor n in numbers:\n    groups[n % 3].append(n)\nprint(dict(groups))",
+    "xp": 20
+  },
+  {
+    "id": "prob-fn-11",
+    "category": "Функции и алгоритмы",
+    "title": "Проверка анаграмм через функцию",
+    "difficulty": "Easy",
+    "desc": "Напишите функцию <code>are_anagrams(s1, s2)</code>, которая возвращает <code>True</code>, если две строки состоят из одних и тех же символов. Проверьте <code>are_anagrams('silent', 'listen')</code> и выведите результат.",
+    "expected": "True",
+    "starter": "# Напишите функцию are_anagrams(s1, s2):\n\n# Проверьте 'silent' и 'listen':\n",
+    "hint": "def are_anagrams(s1, s2):\n    return sorted(s1) == sorted(s2)\n\nprint(are_anagrams('silent', 'listen'))",
+    "xp": 15
+  },
+  {
+    "id": "prob-algo-13",
+    "category": "Алгоритмические задачи",
+    "title": "Поиск мажоритарного элемента (Boyer-Moore Voting)",
+    "difficulty": "Hard",
+    "desc": "Дан список <code>nums = [2, 2, 1, 1, 1, 2, 2]</code>. Мажоритарным называется элемент, который встречается более чем $\\lfloor n / 2 \\rfloor$ раз. Найдите его по алгоритму голосования Бойера-Мура за $O(n)$ времени и $O(1)$ памяти. Выведите число.",
+    "expected": "2",
+    "starter": "nums = [2, 2, 1, 1, 1, 2, 2]\n# Найдите мажоритарный элемент за O(n) времени и O(1) памяти:\n",
+    "hint": "nums = [2, 2, 1, 1, 1, 2, 2]\ncandidate = None\ncount = 0\nfor x in nums:\n    if count == 0: candidate = x\n    count += (1 if x == candidate else -1)\nprint(candidate)",
+    "xp": 25
+  },
+  {
+    "id": "prob-algo-14",
+    "category": "Алгоритмические задачи",
+    "title": "Реверс связного списка (эмуляция узлов)",
+    "difficulty": "Hard",
+    "desc": "Дан список узлов <code>nodes = ['A', 'B', 'C', 'D']</code>. Разверните последовательность в обратный порядок <code>['D', 'C', 'B', 'A']</code> без использования <code>[::-1]</code> и <code>reversed()</code> (с помощью двух указателей). Выведите развернутый список.",
+    "expected": "['D', 'C', 'B', 'A']",
+    "starter": "nodes = ['A', 'B', 'C', 'D']\n# Разверните список двумя указателями:\n",
+    "hint": "nodes = ['A', 'B', 'C', 'D']\nleft, right = 0, len(nodes) - 1\nwhile left < right:\n    nodes[left], nodes[right] = nodes[right], nodes[left]\n    left += 1\n    right -= 1\nprint(nodes)",
+    "xp": 20
+  }
+];
 
     // LEVEL OPTIONS METADATA FOR STYLIZED CUSTOM DROPDOWN
     const LEVEL_OPTIONS = [
-      { val: "all", badge: "ALL", label: "Все уровни (0 — 9)", sub: "Полный курс из 43 разделов" },
+      { val: "all", badge: "ALL", label: "Все уровни (0 — 9)", sub: "Полный курс из 45 разделов" },
       { val: "0", badge: "0", label: "0. Инструменты и Окружение", sub: "REPL, IDE, venv, Git" },
       { val: "1", badge: "1", label: "1. Базовый синтаксис и Типы", sub: "id(), типы, срезы, match/case" },
       { val: "2", badge: "2", label: "2. Коллекции и Структуры", sub: "Списки, dict, set, collections" },
@@ -1545,22 +2867,28 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
     };
 
     // STATE
+    let navMode = "course"; // 'course' | 'problemset'
     let currentLessonIndex = 0;
     let currentTaskIndex = 0;
+    let currentProblemIndex = 0;
     let isSandboxMode = false;
     let isTerminalCompact = false;
     let activeLevelFilter = "all";
+    let activeProblemCategory = "all";
+    let problemSearchQuery = "";
     let pyodideInstance = null;
     let userXp = 0;
     let completedTasks = new Set();
     let completedLessons = new Set();
-    let currentMobileTab = "theory"; // 'lessons' | 'theory' | 'editor'
+    let completedProblems = new Set();
+    let currentMobileTab = "course"; // 'course' | 'problemset' | 'theory' | 'editor'
 
     // STORAGE KEYS
-    const STORAGE_KEY_XP = "pythoncraft_xp_v5";
-    const STORAGE_KEY_COMPLETED_TASKS = "pythoncraft_tasks_v5";
-    const STORAGE_KEY_COMPLETED_LESSONS = "pythoncraft_lessons_v5";
-    const STORAGE_KEY_CODE_PREFIX = "pythoncraft_code_v5_";
+    const STORAGE_KEY_XP = "pythoncraft_xp_v6";
+    const STORAGE_KEY_COMPLETED_TASKS = "pythoncraft_tasks_v6";
+    const STORAGE_KEY_COMPLETED_LESSONS = "pythoncraft_lessons_v6";
+    const STORAGE_KEY_COMPLETED_PROBLEMS = "pythoncraft_problems_v6";
+    const STORAGE_KEY_CODE_PREFIX = "pythoncraft_code_v6_";
 
     // INIT
     window.addEventListener("DOMContentLoaded", () => {
@@ -1568,6 +2896,7 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       loadState();
       renderCustomDropdown();
       renderCurriculum();
+      initProblemSetUI();
       switchLesson(0, 0);
       setupEditorListeners();
       initPyodideEngine();
@@ -1594,6 +2923,11 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         try { completedLessons = new Set(JSON.parse(savedCompletedLessons)); } catch (e) { completedLessons = new Set(); }
       }
 
+      const savedCompletedProblems = localStorage.getItem(STORAGE_KEY_COMPLETED_PROBLEMS);
+      if (savedCompletedProblems) {
+        try { completedProblems = new Set(JSON.parse(savedCompletedProblems)); } catch (e) { completedProblems = new Set(); }
+      }
+
       updateProgress();
     }
 
@@ -1604,7 +2938,8 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
     }
 
     function updateXpDisplay() {
-      document.getElementById("userXp").innerText = userXp;
+      const el = document.getElementById("userXp");
+      if (el) el.textContent = userXp;
     }
 
     function markTaskComplete(taskId, xpAmount = 15) {
@@ -1616,13 +2951,24 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
 
         // Check if all tasks in current lesson are done
         const lesson = PLAN_DATABASE[currentLessonIndex];
-        if (lesson.tasks.every(t => completedTasks.has(t.id))) {
+        if (lesson && lesson.tasks && lesson.tasks.every(t => completedTasks.has(t.id))) {
           completedLessons.add(lesson.id);
           localStorage.setItem(STORAGE_KEY_COMPLETED_LESSONS, JSON.stringify(Array.from(completedLessons)));
         }
 
         renderCurriculum();
         renderTaskPills();
+        updateProgress();
+      }
+    }
+
+    function markProblemComplete(problemId, xpAmount = 20) {
+      if (!completedProblems.has(problemId)) {
+        completedProblems.add(problemId);
+        localStorage.setItem(STORAGE_KEY_COMPLETED_PROBLEMS, JSON.stringify(Array.from(completedProblems)));
+        addXp(xpAmount);
+        triggerConfetti();
+        renderProblemSet();
         updateProgress();
       }
     }
@@ -1649,20 +2995,32 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       if (isDone) {
         btn.classList.remove("bg-theme-emeraldMuted", "text-theme-emerald");
         btn.classList.add("bg-surface-subtle", "text-theme-muted", "border-border");
-        text.innerText = "Изучено (✓ Пройдено)";
+        text.textContent = "Изучено (✓ Пройдено)";
       } else {
         btn.classList.add("bg-theme-emeraldMuted", "text-theme-emerald");
         btn.classList.remove("bg-surface-subtle", "text-theme-muted", "border-border");
-        text.innerText = "Отметить как изученное (+10 XP)";
+        text.textContent = "Отметить как изученное (+10 XP)";
       }
     }
 
     function updateProgress() {
       const totalLessons = PLAN_DATABASE.length;
-      const count = completedLessons.size;
-      const pct = totalLessons > 0 ? Math.round((count / totalLessons) * 100) : 0;
-      document.getElementById("progressPercent").innerText = `${pct}%`;
-      document.getElementById("lessonsCountBadge").innerText = `${count}/${totalLessons}`;
+      const totalProblems = PROBLEM_SET_DATABASE.length;
+      const countLessons = completedLessons.size;
+      const countProblems = completedProblems.size;
+
+      const totalItems = totalLessons + totalProblems;
+      const totalDone = countLessons + countProblems;
+      const pct = totalItems > 0 ? Math.round((totalDone / totalItems) * 100) : 0;
+
+      const pctEl = document.getElementById("progressPercent");
+      if (pctEl) pctEl.textContent = `${pct}%`;
+
+      const lCountBadge = document.getElementById("lessonsCountBadge");
+      if (lCountBadge) lCountBadge.textContent = `${countLessons}/${totalLessons}`;
+
+      const pCountBadge = document.getElementById("problemsetCountBadge");
+      if (pCountBadge) pCountBadge.textContent = `${countProblems}/${totalProblems}`;
     }
 
     function resetAllProgress() {
@@ -1671,15 +3029,447 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         userXp = 0;
         completedTasks.clear();
         completedLessons.clear();
+        completedProblems.clear();
         updateXpDisplay();
         updateProgress();
         renderCurriculum();
+        renderProblemSet();
         switchLesson(0, 0);
         appendTerminalOutput("Прогресс успешно сброшен.", "text-theme-muted");
       }
     }
 
-    // 2. STYLIZED ANIMATED CUSTOM DROPDOWN CONTROLLER
+    // 2. NAVIGATION MODES: COURSE vs PROBLEM SET
+    function switchNavMode(mode) {
+      navMode = mode;
+      const isCourse = mode === "course";
+
+      // Desktop switcher buttons
+      const btnCourse = document.getElementById("desktopModeBtnCourse");
+      const btnProblemset = document.getElementById("desktopModeBtnProblemset");
+
+      if (btnCourse && btnProblemset) {
+        if (isCourse) {
+          btnCourse.className = "px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 bg-theme-emeraldMuted text-theme-emerald border border-theme-emerald/30 font-semibold";
+          btnProblemset.className = "px-3 py-1.5 rounded-lg text-theme-muted hover:text-white hover:bg-surface-hover border border-transparent font-medium transition-all flex items-center gap-1.5";
+        } else {
+          btnCourse.className = "px-3 py-1.5 rounded-lg text-theme-muted hover:text-white hover:bg-surface-hover border border-transparent font-medium transition-all flex items-center gap-1.5";
+          btnProblemset.className = "px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 bg-theme-amberMuted text-theme-amber border border-theme-amber/30 font-semibold";
+        }
+      }
+
+      // Sidebar visibility
+      const lessonsSidebar = document.getElementById("lessonsSidebar");
+      const problemsetSidebar = document.getElementById("problemsetSidebar");
+      if (isCourse) {
+        lessonsSidebar.classList.remove("hidden");
+        problemsetSidebar.classList.add("hidden");
+        switchLesson(currentLessonIndex, currentTaskIndex);
+      } else {
+        lessonsSidebar.classList.add("hidden");
+        problemsetSidebar.classList.remove("hidden");
+        switchProblem(currentProblemIndex);
+      }
+
+      updateResponsiveLayout();
+    }
+
+    // Mobile tabs switcher handler
+    function switchMobileNav(target) {
+      if (target === "course") {
+        currentMobileTab = "course";
+        switchNavMode("course");
+      } else if (target === "problemset") {
+        currentMobileTab = "problemset";
+        switchNavMode("problemset");
+      } else if (target === "theory") {
+        currentMobileTab = "theory";
+        updateResponsiveLayout();
+      } else if (target === "editor") {
+        currentMobileTab = "editor";
+        updateResponsiveLayout();
+      }
+    }
+
+    // 3. PROBLEM SET CONTROLLER & CATALOG SORTING
+    let problemSortMode = "topic"; // 'topic' | 'easy-first' | 'hard-first' | 'alpha' | 'xp-desc'
+    let problemStatusFilter = "all"; // 'all' | 'unsolved' | 'solved'
+    let currentProblemsetMode = "catalog"; // 'catalog' | 'random'
+    let randomWorkoutList = null; // null means standard view, array means active workout session
+
+    const TOPIC_ORDER = [
+      "Ввод и вывод",
+      "Числа и арифметика",
+      "Условия и логика",
+      "Циклы и итерации",
+      "Комплексные основы",
+      "Списки и кортежи",
+      "Словари и множества",
+      "Функции и алгоритмы",
+      "Алгоритмические задачи"
+    ];
+    const DIFF_WEIGHT = { "Easy": 1, "Medium": 2, "Hard": 3 };
+
+    function initProblemSetUI() {
+      // Collect unique categories in specified order
+      const foundCats = new Set(PROBLEM_SET_DATABASE.map(p => p.category));
+      const sortedCats = TOPIC_ORDER.filter(c => foundCats.has(c));
+      foundCats.forEach(c => {
+        if (!sortedCats.includes(c)) sortedCats.push(c);
+      });
+      const categories = ["all", ...sortedCats];
+
+      const container = document.getElementById("problemCategoryPills");
+      if (container) {
+        container.innerHTML = "";
+        categories.forEach(cat => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.onclick = () => selectProblemCategory(cat);
+          btn.id = `pill-cat-${cat}`;
+          const isAll = cat === "all";
+          btn.className = `px-2.5 py-1 rounded-md shrink-0 transition-all font-mono text-[11px] ${
+            isAll
+              ? "bg-theme-amber text-canvas font-bold"
+              : "bg-surface border border-border text-theme-muted hover:text-white"
+          }`;
+          btn.textContent = isAll ? "Все" : cat;
+          container.appendChild(btn);
+        });
+      }
+
+      renderProblemSet();
+    }
+
+    function setProblemsetMode(mode) {
+      currentProblemsetMode = mode;
+      const tabCat = document.getElementById("tabCatalogBtn");
+      const tabRan = document.getElementById("tabRandomBtn");
+      const panelCat = document.getElementById("catalogControlsPanel");
+      const panelRan = document.getElementById("randomWorkoutPanel");
+
+      if (mode === "catalog") {
+        if (tabCat) tabCat.className = "py-1.5 px-2 rounded-lg font-semibold bg-theme-amberMuted text-theme-amber border border-theme-amber/30 flex items-center justify-center gap-1.5 transition-all";
+        if (tabRan) tabRan.className = "py-1.5 px-2 rounded-lg text-theme-muted hover:text-white flex items-center justify-center gap-1.5 transition-all";
+        if (panelCat) panelCat.classList.remove("hidden");
+        if (panelRan) panelRan.classList.add("hidden");
+        if (randomWorkoutList) {
+          resetRandomWorkout();
+        }
+      } else {
+        if (tabRan) tabRan.className = "py-1.5 px-2 rounded-lg font-semibold bg-theme-amberMuted text-theme-amber border border-theme-amber/30 flex items-center justify-center gap-1.5 transition-all";
+        if (tabCat) tabCat.className = "py-1.5 px-2 rounded-lg text-theme-muted hover:text-white flex items-center justify-center gap-1.5 transition-all";
+        if (panelRan) panelRan.classList.remove("hidden");
+        if (panelCat) panelCat.classList.add("hidden");
+      }
+      lucide.createIcons();
+    }
+
+    function handleProblemSortChange(val) {
+      problemSortMode = val;
+      renderProblemSet();
+    }
+
+    function handleProblemStatusChange(val) {
+      problemStatusFilter = val;
+      renderProblemSet();
+    }
+
+    function selectProblemCategory(cat) {
+      activeProblemCategory = cat;
+      const badge = document.getElementById("activeTopicBadge");
+      if (badge) {
+        badge.textContent = cat === "all" ? "Все темы" : cat;
+      }
+      const pills = document.getElementById("problemCategoryPills")?.querySelectorAll("button");
+      if (pills) {
+        pills.forEach(btn => {
+          const isMatch = btn.id === `pill-cat-${cat}`;
+          btn.className = `px-2.5 py-1 rounded-md shrink-0 transition-all font-mono text-[11px] ${
+            isMatch
+              ? "bg-theme-amber text-canvas font-bold"
+              : "bg-surface border border-border text-theme-muted hover:text-white"
+          }`;
+        });
+      }
+      renderProblemSet();
+    }
+
+    function handleProblemSearch(query) {
+      problemSearchQuery = query.toLowerCase().trim();
+      renderProblemSet();
+    }
+
+    function generateRandomWorkout() {
+      const diff = document.getElementById("randomDiffSelect") ? document.getElementById("randomDiffSelect").value : "all";
+      const count = parseInt(document.getElementById("randomCountSelect") ? document.getElementById("randomCountSelect").value : "1", 10) || 1;
+
+      // Filter candidates
+      let pool = PROBLEM_SET_DATABASE.filter(p => {
+        const matchDiff = diff === "all" || p.difficulty === diff;
+        const matchCat = activeProblemCategory === "all" || p.category === activeProblemCategory;
+        return matchDiff && matchCat;
+      });
+
+      if (pool.length === 0) {
+        // Fallback without category filter if nothing found in category
+        pool = PROBLEM_SET_DATABASE.filter(p => diff === "all" || p.difficulty === diff);
+      }
+
+      if (pool.length === 0) {
+        alert("Нет доступных задач по выбранным критериям.");
+        return;
+      }
+
+      // Shuffle using Fisher-Yates
+      const shuffled = [...pool];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      const selected = shuffled.slice(0, count);
+
+      if (count === 1) {
+        // Instant jump to single random problem
+        const prob = selected[0];
+        const originalIndex = PROBLEM_SET_DATABASE.findIndex(x => x.id === prob.id);
+        switchProblem(originalIndex);
+        appendTerminalOutput(`🎲 Подобрана случайная задача: [${prob.title}] (${prob.difficulty}).`, "text-theme-amber");
+      } else {
+        // Activate Multi-task challenge session
+        randomWorkoutList = selected;
+        const actBadge = document.getElementById("randomActiveBadge");
+        if (actBadge) actBadge.classList.remove("hidden");
+        const rstBtn = document.getElementById("resetWorkoutBtn");
+        if (rstBtn) rstBtn.classList.remove("hidden");
+        
+        // Open first problem of workout
+        const firstProb = selected[0];
+        const originalIndex = PROBLEM_SET_DATABASE.findIndex(x => x.id === firstProb.id);
+        switchProblem(originalIndex);
+        appendTerminalOutput(`🎲 Сформирован челлендж из ${selected.length} случайных задач! Решите их подряд.`, "text-theme-amber");
+      }
+
+      renderProblemSet();
+      triggerConfetti();
+    }
+
+    function resetRandomWorkout() {
+      randomWorkoutList = null;
+      const actBadge = document.getElementById("randomActiveBadge");
+      if (actBadge) actBadge.classList.add("hidden");
+      const rstBtn = document.getElementById("resetWorkoutBtn");
+      if (rstBtn) rstBtn.classList.add("hidden");
+      renderProblemSet();
+    }
+
+    function renderProblemSet() {
+      const container = document.getElementById("problemsetContainer");
+      if (!container) return;
+      container.innerHTML = "";
+
+      let itemsToRender = [];
+      if (randomWorkoutList) {
+        itemsToRender = [...randomWorkoutList];
+      } else {
+        itemsToRender = PROBLEM_SET_DATABASE.filter(p => {
+          const matchCat = activeProblemCategory === "all" || p.category === activeProblemCategory;
+          const matchSearch = !problemSearchQuery || 
+            p.title.toLowerCase().includes(problemSearchQuery) || 
+            p.desc.toLowerCase().includes(problemSearchQuery) ||
+            p.category.toLowerCase().includes(problemSearchQuery);
+          
+          let matchStatus = true;
+          if (problemStatusFilter === "unsolved") {
+            matchStatus = !completedProblems.has(p.id);
+          } else if (problemStatusFilter === "solved") {
+            matchStatus = completedProblems.has(p.id);
+          }
+
+          return matchCat && matchSearch && matchStatus;
+        });
+
+        // Apply sorting
+        if (problemSortMode === "topic") {
+          itemsToRender.sort((a, b) => {
+            const idxA = TOPIC_ORDER.indexOf(a.category);
+            const idxB = TOPIC_ORDER.indexOf(b.category);
+            const catComp = (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+            if (catComp !== 0) return catComp;
+            const diffA = DIFF_WEIGHT[a.difficulty] || 0;
+            const diffB = DIFF_WEIGHT[b.difficulty] || 0;
+            if (diffA !== diffB) return diffA - diffB;
+            return a.id.localeCompare(b.id);
+          });
+        } else if (problemSortMode === "easy-first") {
+          itemsToRender.sort((a, b) => {
+            const diffComp = (DIFF_WEIGHT[a.difficulty] || 0) - (DIFF_WEIGHT[b.difficulty] || 0);
+            if (diffComp !== 0) return diffComp;
+            return a.title.localeCompare(b.title, "ru");
+          });
+        } else if (problemSortMode === "hard-first") {
+          itemsToRender.sort((a, b) => {
+            const diffComp = (DIFF_WEIGHT[b.difficulty] || 0) - (DIFF_WEIGHT[a.difficulty] || 0);
+            if (diffComp !== 0) return diffComp;
+            return a.title.localeCompare(b.title, "ru");
+          });
+        } else if (problemSortMode === "alpha") {
+          itemsToRender.sort((a, b) => a.title.localeCompare(b.title, "ru"));
+        } else if (problemSortMode === "xp-desc") {
+          itemsToRender.sort((a, b) => (b.xp - a.xp) || a.title.localeCompare(b.title, "ru"));
+        }
+      }
+
+      if (itemsToRender.length === 0) {
+        container.innerHTML = `
+          <div class="p-6 text-center text-xs text-theme-muted space-y-2">
+            <i data-lucide="inbox" class="w-6 h-6 mx-auto text-theme-faint mb-1"></i>
+            <div>Задачи по выбранным критериям не найдены.</div>
+            <button type="button" onclick="activeProblemCategory='all'; problemStatusFilter='all'; problemSearchQuery=''; renderProblemSet();" class="text-theme-amber hover:underline text-[11px]">
+              Сбросить фильтры
+            </button>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      let lastCategory = null;
+      itemsToRender.forEach((p) => {
+        // If sorting by topic and showing all categories, print a clean topic group header
+        if (!randomWorkoutList && problemSortMode === "topic" && activeProblemCategory === "all") {
+          if (p.category !== lastCategory) {
+            lastCategory = p.category;
+            const groupHeader = document.createElement("div");
+            groupHeader.className = "pt-2.5 pb-1 px-1 flex items-center justify-between text-[11px] font-bold text-theme-amber border-b border-border/40 mb-1 mt-1 sticky top-0 bg-canvas/95 backdrop-blur-sm z-10";
+            groupHeader.innerHTML = `
+              <span class="flex items-center gap-1.5 uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-theme-amber"></span>
+                ${p.category}
+              </span>
+            `;
+            container.appendChild(groupHeader);
+          }
+        }
+
+        const originalIndex = PROBLEM_SET_DATABASE.findIndex(x => x.id === p.id);
+        const isCurrent = navMode === "problemset" && !isSandboxMode && originalIndex === currentProblemIndex;
+        const isDone = completedProblems.has(p.id);
+
+        const card = document.createElement("button");
+        card.type = "button";
+        card.onclick = () => switchProblem(originalIndex);
+        card.className = `btn-tactile w-full text-left p-2.5 rounded-xl border transition-all flex items-start justify-between gap-2 ${
+          isCurrent
+            ? "bg-theme-amberMuted border-theme-amber/40 text-white font-semibold shadow-sm"
+            : "bg-surface-subtle/70 border-border text-theme-muted hover:text-white hover:bg-surface-hover"
+        }`;
+
+        card.innerHTML = `
+          <div class="truncate min-w-0">
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0 ${isDone ? 'bg-theme-emerald' : (isCurrent ? 'bg-theme-amber' : 'bg-border')}"></span>
+              <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-surface border border-border text-theme-faint shrink-0">${p.category}</span>
+              <span class="text-[10px] font-mono font-semibold ${p.difficulty === 'Easy' ? 'text-theme-emerald' : (p.difficulty === 'Medium' ? 'text-theme-amber' : 'text-theme-coral')}">${p.difficulty}</span>
+            </div>
+            <div class="text-xs truncate ${isCurrent ? 'text-white font-bold' : 'text-theme-text'}">${p.title}</div>
+          </div>
+          <div class="flex items-center gap-1 shrink-0 mt-0.5">
+            <span class="text-[10px] font-mono text-theme-amber font-semibold">+${p.xp}</span>
+            ${isDone ? '<i data-lucide="check" class="w-3.5 h-3.5 text-theme-emerald"></i>' : ''}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    function switchProblem(idx) {
+      if (idx < 0 || idx >= PROBLEM_SET_DATABASE.length) return;
+      if (isSandboxMode) exitSandboxMode();
+
+      currentProblemIndex = idx;
+      navMode = "problemset";
+      const problem = PROBLEM_SET_DATABASE[idx];
+
+      // Update Nav titles
+      const navMod = document.getElementById("navModuleTitle");
+      const navLes = document.getElementById("navLessonTitle");
+      if (navMod) navMod.textContent = `Задачник • ${problem.category}`;
+      if (navLes) navLes.textContent = problem.title;
+
+      // Update middle column header
+      const badge = document.getElementById("lessonBadge");
+      const diff = document.getElementById("lessonDifficulty");
+      const title = document.getElementById("lessonTitle");
+      const sideInd = document.getElementById("taskSideIndicator");
+      const sectionHeader = document.getElementById("taskSectionHeaderTitle");
+
+      if (badge) badge.textContent = "Задачник";
+      if (diff) diff.textContent = problem.difficulty;
+      if (title) title.textContent = `${idx + 1}. ${problem.title}`;
+      if (sideInd) sideInd.className = "absolute top-0 left-0 w-1.5 h-full bg-theme-amber";
+      if (sectionHeader) {
+        sectionHeader.className = "text-xs font-bold text-theme-amber flex items-center gap-1.5";
+        sectionHeader.innerHTML = `<i data-lucide="crosshair" class="w-4 h-4"></i> Практическая задача ${idx + 1} из ${PROBLEM_SET_DATABASE.length}:`;
+      }
+
+      // Middle column body
+      document.getElementById("theoryBody").innerHTML = `
+        <div class="space-y-3">
+          <div class="p-3 rounded-lg bg-surface-subtle border border-border text-xs text-theme-muted">
+            <span class="font-semibold text-white">Категория:</span> ${escapeHtml(problem.category)} &nbsp;|&nbsp;
+            <span class="font-semibold text-white">Сложность:</span> ${escapeHtml(problem.difficulty)}
+          </div>
+          <p class="text-xs text-theme-text leading-relaxed">
+            Решите представленную задачу в окне редактора справа. Ваш вывод через <code>print()</code> должен точно совпадать с ожидаемым выводом теста.
+          </p>
+        </div>
+      `;
+
+      // Show coding section, hide theory-only section
+      document.getElementById("codingTasksSection").classList.remove("hidden");
+      document.getElementById("theoryOnlySection").classList.add("hidden");
+      document.getElementById("hintBtn").classList.remove("hidden");
+      document.getElementById("tasksPillsContainer").innerHTML = "";
+
+      // Load problem details
+      document.getElementById("currentTaskTitle").textContent = problem.title;
+      document.getElementById("currentTaskIndexLabel").textContent = `${idx + 1} из ${PROBLEM_SET_DATABASE.length}`;
+      document.getElementById("taskDescription").innerHTML = problem.desc;
+      document.getElementById("expectedOutputDisplay").textContent = problem.expected;
+      document.getElementById("taskXpBadge").textContent = `+${problem.xp} XP`;
+      document.getElementById("editorFileName").textContent = `${problem.id}.py`;
+
+      // Status badge reset
+      const statusBadge = document.getElementById("taskStatusBadge");
+      statusBadge.className = "hidden";
+      statusBadge.innerHTML = "";
+
+      // Load saved code or starter
+      const savedCode = localStorage.getItem(STORAGE_KEY_CODE_PREFIX + problem.id);
+      const codeEditor = document.getElementById("codeEditor");
+      codeEditor.value = savedCode !== null ? savedCode : problem.starter;
+      updateLineNumbers();
+
+      const nextActionText = document.getElementById("nextActionText");
+      if (nextActionText) {
+        nextActionText.textContent = idx < PROBLEM_SET_DATABASE.length - 1 ? "Следующая задача" : "Все задачи решены!";
+      }
+
+      renderProblemSet();
+
+      // On mobile viewports, automatically jump to Theory/Spec panel
+      if (window.innerWidth < 1024) {
+        currentMobileTab = "theory";
+        updateResponsiveLayout();
+      }
+    }
+
+    // 4. CURRICULUM ACCORDION & DROPDOWN
     function renderCustomDropdown() {
       const menu = document.getElementById("levelDropdownMenu");
       menu.innerHTML = "";
@@ -1704,10 +3494,10 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
               isSelected 
                 ? "bg-theme-emerald text-canvas font-bold" 
                 : "bg-surface-subtle text-theme-muted border border-border"
-            }">${opt.badge}</span>
+            }">${escapeHtml(opt.badge)}</span>
             <div class="truncate">
-              <div class="truncate ${isSelected ? 'text-white' : 'text-theme-text'}">${opt.label}</div>
-              <div class="text-[10px] text-theme-faint font-normal truncate">${opt.sub}</div>
+              <div class="truncate ${isSelected ? 'text-white' : 'text-theme-text'}">${escapeHtml(opt.label)}</div>
+              <div class="text-[10px] text-theme-faint font-normal truncate">${escapeHtml(opt.sub)}</div>
             </div>
           </div>
           ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5 text-theme-emerald shrink-0"></i>' : ''}
@@ -1750,15 +3540,14 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       activeLevelFilter = val;
       const opt = LEVEL_OPTIONS.find(o => o.val === val);
       if (opt) {
-        document.getElementById("levelDropdownBadge").innerText = opt.badge;
-        document.getElementById("levelDropdownText").innerText = opt.label;
+        document.getElementById("levelDropdownBadge").textContent = opt.badge;
+        document.getElementById("levelDropdownText").textContent = opt.label;
       }
       closeLevelDropdown();
       renderCustomDropdown();
       renderCurriculum();
     }
 
-    // Close when clicking outside dropdown
     document.addEventListener("click", (e) => {
       const dropdown = document.getElementById("customLevelDropdown");
       if (dropdown && !dropdown.contains(e.target)) {
@@ -1766,7 +3555,6 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       }
     });
 
-    // 3. CURRICULUM ACCORDION RENDERING
     function renderCurriculum() {
       const container = document.getElementById("modulesContainer");
       container.innerHTML = "";
@@ -1787,7 +3575,7 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         const header = document.createElement("div");
         header.className = "px-3 py-2 bg-surface border-b border-border text-[11px] font-bold text-theme-muted uppercase tracking-wider flex items-center justify-between";
         header.innerHTML = `
-          <span class="truncate pr-2">${modName}</span>
+          <span class="truncate pr-2">${escapeHtml(modName)}</span>
           <span class="font-mono text-[10px] text-theme-emerald px-1.5 py-0.2 rounded bg-surface-subtle border border-border">${lessons.length}</span>
         `;
         card.appendChild(header);
@@ -1796,7 +3584,7 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         list.className = "p-1 space-y-0.5";
 
         lessons.forEach(item => {
-          const isCurrent = !isSandboxMode && item.fullIndex === currentLessonIndex;
+          const isCurrent = navMode === "course" && !isSandboxMode && item.fullIndex === currentLessonIndex;
           const isLessonDone = completedLessons.has(item.id);
           const hasCodingTasks = item.tasks && item.tasks.length > 0;
 
@@ -1811,7 +3599,7 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
           btn.innerHTML = `
             <div class="flex items-center gap-2 truncate">
               <span class="w-1.5 h-1.5 rounded-full shrink-0 ${isLessonDone ? 'bg-theme-emerald' : (isCurrent ? 'bg-theme-amber' : 'bg-border')}"></span>
-              <span class="truncate">${item.title}</span>
+              <span class="truncate">${escapeHtml(item.title)}</span>
             </div>
             <div class="flex items-center gap-1 shrink-0">
               ${!hasCodingTasks ? '<span class="text-[9px] uppercase font-mono px-1 py-0.2 rounded bg-surface text-theme-muted border border-border">Теория</span>' : ''}
@@ -1827,24 +3615,37 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       lucide.createIcons();
     }
 
-    // 4. LESSON & TASK SWITCHING
+    // 5. LESSON & TASK SWITCHING (COURSE MODE)
     function switchLesson(lessonIdx, taskIdx = 0) {
       if (lessonIdx < 0 || lessonIdx >= PLAN_DATABASE.length) return;
-      if (isSandboxMode) {
-        exitSandboxMode(lessonIdx);
-        return;
-      }
+      if (isSandboxMode) exitSandboxMode();
 
       currentLessonIndex = lessonIdx;
       currentTaskIndex = taskIdx;
+      navMode = "course";
       const lesson = PLAN_DATABASE[lessonIdx];
 
-      // Update Nav & Theory Header
-      document.getElementById("navModuleTitle").innerText = lesson.module;
-      document.getElementById("navLessonTitle").innerText = lesson.title;
-      document.getElementById("lessonBadge").innerText = lesson.badge;
-      document.getElementById("lessonDifficulty").innerText = lesson.difficulty;
-      document.getElementById("lessonTitle").innerText = lesson.title;
+      // Update Nav titles
+      const navMod = document.getElementById("navModuleTitle");
+      const navLes = document.getElementById("navLessonTitle");
+      if (navMod) navMod.textContent = lesson.module;
+      if (navLes) navLes.textContent = lesson.title;
+
+      const badge = document.getElementById("lessonBadge");
+      const diff = document.getElementById("lessonDifficulty");
+      const title = document.getElementById("lessonTitle");
+      const sideInd = document.getElementById("taskSideIndicator");
+      const sectionHeader = document.getElementById("taskSectionHeaderTitle");
+
+      if (badge) badge.textContent = lesson.badge;
+      if (diff) diff.textContent = lesson.difficulty;
+      if (title) title.textContent = lesson.title;
+      if (sideInd) sideInd.className = "absolute top-0 left-0 w-1.5 h-full bg-theme-emerald";
+      if (sectionHeader) {
+        sectionHeader.className = "text-xs font-bold text-theme-emerald flex items-center gap-1.5";
+        sectionHeader.innerHTML = `<i data-lucide="check-circle-2" class="w-4 h-4"></i> Практические задания темы:`;
+      }
+
       document.getElementById("theoryBody").innerHTML = lesson.theory;
 
       const hasTasks = lesson.tasks && lesson.tasks.length > 0;
@@ -1871,7 +3672,6 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       updateNextActionBtn();
       renderCurriculum();
 
-      // On mobile viewports, automatically jump to Theory panel when picking a lesson
       if (window.innerWidth < 1024) {
         currentMobileTab = "theory";
         updateResponsiveLayout();
@@ -1918,19 +3718,17 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       const lesson = PLAN_DATABASE[currentLessonIndex];
       const task = lesson.tasks[currentTaskIndex];
 
-      document.getElementById("currentTaskTitle").innerText = task.title;
-      document.getElementById("currentTaskIndexLabel").innerText = `${currentTaskIndex + 1} из ${lesson.tasks.length}`;
+      document.getElementById("currentTaskTitle").textContent = task.title;
+      document.getElementById("currentTaskIndexLabel").textContent = `${currentTaskIndex + 1} из ${lesson.tasks.length}`;
       document.getElementById("taskDescription").innerHTML = task.desc;
-      document.getElementById("expectedOutputDisplay").innerText = task.expected;
-      document.getElementById("taskXpBadge").innerText = `+${task.xp || 15} XP`;
-      document.getElementById("editorFileName").innerText = `${task.id}.py`;
+      document.getElementById("expectedOutputDisplay").textContent = task.expected;
+      document.getElementById("taskXpBadge").textContent = `+${task.xp || 15} XP`;
+      document.getElementById("editorFileName").textContent = `${task.id}.py`;
 
-      // Status badge reset
       const badge = document.getElementById("taskStatusBadge");
       badge.className = "hidden";
       badge.innerHTML = "";
 
-      // Load saved user code or clean starter template (NEVER pre-filled solutions)
       const savedCode = localStorage.getItem(STORAGE_KEY_CODE_PREFIX + task.id);
       const codeEditor = document.getElementById("codeEditor");
       codeEditor.value = savedCode !== null ? savedCode : task.starter;
@@ -1941,7 +3739,7 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
 
     function loadTheoryOnlyEditor() {
       const lesson = PLAN_DATABASE[currentLessonIndex];
-      document.getElementById("editorFileName").innerText = `${lesson.id}_demo.py`;
+      document.getElementById("editorFileName").textContent = `${lesson.id}_demo.py`;
 
       const savedCode = localStorage.getItem(STORAGE_KEY_CODE_PREFIX + lesson.id);
       const codeEditor = document.getElementById("codeEditor");
@@ -1950,19 +3748,37 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
     }
 
     function updateNextActionBtn() {
+      const nextBtnText = document.getElementById("nextActionText");
+      if (navMode === "problemset") {
+        if (currentProblemIndex < PROBLEM_SET_DATABASE.length - 1) {
+          nextBtnText.textContent = `К задаче ${currentProblemIndex + 2}`;
+        } else {
+          nextBtnText.textContent = "Все задачи завершены!";
+        }
+        return;
+      }
+
       const lesson = PLAN_DATABASE[currentLessonIndex];
       const hasTasks = lesson.tasks && lesson.tasks.length > 0;
       const hasNextTask = hasTasks && currentTaskIndex < lesson.tasks.length - 1;
-      const nextBtnText = document.getElementById("nextActionText");
 
       if (hasNextTask) {
-        nextBtnText.innerText = `К задаче ${currentTaskIndex + 2}`;
+        nextBtnText.textContent = `К задаче ${currentTaskIndex + 2}`;
       } else {
-        nextBtnText.innerText = "Следующий урок";
+        nextBtnText.textContent = "Следующий урок";
       }
     }
 
     function advanceNextTaskOrLesson() {
+      if (navMode === "problemset") {
+        if (currentProblemIndex < PROBLEM_SET_DATABASE.length - 1) {
+          switchProblem(currentProblemIndex + 1);
+        } else {
+          alert("🎉 Поздравляем! Вы решили все задачи из Большого Задачника!");
+        }
+        return;
+      }
+
       const lesson = PLAN_DATABASE[currentLessonIndex];
       const hasTasks = lesson.tasks && lesson.tasks.length > 0;
 
@@ -1972,12 +3788,21 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         if (currentLessonIndex < PLAN_DATABASE.length - 1) {
           switchLesson(currentLessonIndex + 1, 0);
         } else {
-          alert("🎉 Поздравляем! Вы прошли всю программу курса PythonCraft! Закрепляйте навыки в режиме «Песочница».");
+          alert("🎉 Поздравляем! Вы прошли всю программу курса PythonCraft! Закрепляйте навыки в «Большом Задачнике» и режиме «Песочница».");
         }
       }
     }
 
     function insertSolutionHint() {
+      if (navMode === "problemset") {
+        const problem = PROBLEM_SET_DATABASE[currentProblemIndex];
+        const editor = document.getElementById("codeEditor");
+        editor.value = problem.hint;
+        updateLineNumbers();
+        appendTerminalOutput(`💡 Готовое решение подставлено в редактор для [${problem.title}].`, "text-theme-amber");
+        return;
+      }
+
       const lesson = PLAN_DATABASE[currentLessonIndex];
       if (!lesson.tasks || lesson.tasks.length === 0) return;
       const task = lesson.tasks[currentTaskIndex];
@@ -1990,6 +3815,9 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
     function resetEditorCode() {
       if (isSandboxMode) {
         document.getElementById("codeEditor").value = "# Свободная песочница Python 3.12\nprint(\"Hello, PythonCraft!\")\n";
+      } else if (navMode === "problemset") {
+        const problem = PROBLEM_SET_DATABASE[currentProblemIndex];
+        document.getElementById("codeEditor").value = problem.starter;
       } else {
         const lesson = PLAN_DATABASE[currentLessonIndex];
         if (lesson.tasks && lesson.tasks.length > 0) {
@@ -2009,7 +3837,7 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       });
     }
 
-    // 5. TERMINAL PROPORTIONS TOGGLE (6:4 vs 8:2)
+    // 6. TERMINAL PROPORTIONS TOGGLE (6:4 vs 8:2)
     function toggleTerminalCompact() {
       const editorBox = document.getElementById("editorWorkspaceContainer");
       const terminalBox = document.getElementById("terminalContainer");
@@ -2021,17 +3849,17 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         editorBox.classList.add("flex-[8]");
         terminalBox.classList.remove("flex-[4]");
         terminalBox.classList.add("flex-[2]");
-        btn.innerText = "↕ 8:2";
+        btn.textContent = "↕ 8:2";
       } else {
         editorBox.classList.remove("flex-[8]");
         editorBox.classList.add("flex-[6]");
         terminalBox.classList.remove("flex-[2]");
         terminalBox.classList.add("flex-[4]");
-        btn.innerText = "↕ 6:4";
+        btn.textContent = "↕ 6:4";
       }
     }
 
-    // 6. SANDBOX MODE (MAXIMIZED HUMAN-FRIENDLY WORKSPACE)
+    // 7. SANDBOX MODE (FULLSCREEN PLAYGROUND)
     function toggleSandboxMode() {
       if (isSandboxMode) {
         exitSandboxMode();
@@ -2044,13 +3872,13 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       isSandboxMode = true;
 
       document.getElementById("sandboxCustomBar").classList.remove("hidden");
-      document.getElementById("sandboxBtnText").innerText = "Выйти";
+      document.getElementById("sandboxBtnText").textContent = "Выйти";
       document.getElementById("sandboxBtn").classList.add("bg-theme-emeraldMuted", "border-theme-emerald/50", "text-theme-emerald");
 
-      document.getElementById("editorFileName").innerText = "sandbox_main.py";
+      document.getElementById("editorFileName").textContent = "sandbox_main.py";
       document.getElementById("headerBreadcrumb").classList.add("hidden");
 
-      const saved = localStorage.getItem("pythoncraft_sandbox_code_v5");
+      const saved = localStorage.getItem("pythoncraft_sandbox_code_v6");
       const editor = document.getElementById("codeEditor");
       editor.value = saved || SANDBOX_PRESETS.asyncio;
       updateLineNumbers();
@@ -2065,10 +3893,12 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       document.getElementById("sandboxCustomBar").classList.add("hidden");
       document.getElementById("headerBreadcrumb").classList.remove("hidden");
 
-      document.getElementById("sandboxBtnText").innerText = "Песочница";
+      document.getElementById("sandboxBtnText").textContent = "Песочница";
       document.getElementById("sandboxBtn").classList.remove("bg-theme-emeraldMuted", "border-theme-emerald/50", "text-theme-emerald");
 
-      if (targetLessonIdx !== null) {
+      if (navMode === "problemset") {
+        switchProblem(currentProblemIndex);
+      } else if (targetLessonIdx !== null) {
         switchLesson(targetLessonIdx, 0);
       } else {
         switchLesson(currentLessonIndex, currentTaskIndex);
@@ -2081,19 +3911,22 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         const editor = document.getElementById("codeEditor");
         editor.value = SANDBOX_PRESETS[presetName];
         updateLineNumbers();
-        localStorage.setItem("pythoncraft_sandbox_code_v5", editor.value);
+        localStorage.setItem("pythoncraft_sandbox_code_v6", editor.value);
         appendTerminalOutput(`📦 Шаблон «${presetName}» загружен в песочницу.`, "text-theme-amber");
       }
     }
 
-    // 7. EDITOR TYPING & HOTKEYS
+    // 8. EDITOR TYPING & HOTKEYS
     function setupEditorListeners() {
       const editor = document.getElementById("codeEditor");
 
       editor.addEventListener("input", () => {
         updateLineNumbers();
         if (isSandboxMode) {
-          localStorage.setItem("pythoncraft_sandbox_code_v5", editor.value);
+          localStorage.setItem("pythoncraft_sandbox_code_v6", editor.value);
+        } else if (navMode === "problemset") {
+          const problem = PROBLEM_SET_DATABASE[currentProblemIndex];
+          localStorage.setItem(STORAGE_KEY_CODE_PREFIX + problem.id, editor.value);
         } else {
           const lesson = PLAN_DATABASE[currentLessonIndex];
           if (lesson.tasks && lesson.tasks.length > 0) {
@@ -2124,7 +3957,6 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       });
     }
 
-    // Quick mobile snippet insertion
     function insertCodeSnippet(text, cursorOffset = null) {
       const editor = document.getElementById("codeEditor");
       editor.focus();
@@ -2145,18 +3977,18 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       const lineNumbersEl = document.getElementById("lineNumbers");
       let nums = "";
       for (let i = 1; i <= Math.max(lines, 1); i++) {
-        nums += i + "<br>";
+        nums += `<span class="line-num-item">${i}</span>`;
       }
       lineNumbersEl.innerHTML = nums;
     }
 
-    // 8. PYODIDE WASM PYTHON ENGINE
+    // 9. PYODIDE WASM PYTHON ENGINE
     async function initPyodideEngine() {
       const engineText = document.getElementById("engineText");
       const engineDot = document.getElementById("engineDot");
 
       try {
-        if (engineText) engineText.innerText = "Загрузка Python 3.12...";
+        if (engineText) engineText.textContent = "Загрузка Python 3.12...";
         const script = document.createElement("script");
         script.src = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
         script.onload = async () => {
@@ -2165,7 +3997,7 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
               indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/"
             });
             if (engineDot) engineDot.className = "w-2 h-2 rounded-full bg-theme-emerald";
-            if (engineText) engineText.innerText = "Python 3.12 (Готов)";
+            if (engineText) engineText.textContent = "Python 3.12 (Готов)";
             appendTerminalOutput("⚡ Движок CPython 3.12 (Pyodide WebAssembly) успешно инициализирован!", "text-theme-emerald");
           } catch (err) {
             fallbackEngine(err);
@@ -2182,19 +4014,18 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       const engineDot = document.getElementById("engineDot");
       const engineText = document.getElementById("engineText");
       if (engineDot) engineDot.className = "w-2 h-2 rounded-full bg-theme-amber";
-      if (engineText) engineText.innerText = "Эмулятор синтаксиса";
+      if (engineText) engineText.textContent = "Эмулятор синтаксиса";
       console.warn("Pyodide fallback active:", err);
     }
 
-    // 9. CODE EXECUTION & TEST VALIDATION
+    // 10. CODE EXECUTION & TEST VALIDATION (WITH SECURITY HARDENING)
     async function runPythonCode() {
       const code = document.getElementById("codeEditor").value;
       const runBtn = document.getElementById("runBtn");
       const timeBadge = document.getElementById("runTimeBadge");
-      const statusBadge = document.getElementById("taskStatusBadge");
 
       clearTerminal();
-      appendTerminalOutput(`$ python ${document.getElementById("editorFileName").innerText}`, "text-theme-faint");
+      appendTerminalOutput(`$ python ${document.getElementById("editorFileName").textContent}`, "text-theme-faint");
 
       const startTime = performance.now();
       let stdout = "";
@@ -2229,17 +4060,22 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         appendTerminalOutput(err.message || String(err), "text-theme-coral");
       } finally {
         const elapsed = Math.round(performance.now() - startTime);
-        timeBadge.innerText = `${elapsed}ms`;
+        timeBadge.textContent = `${elapsed}ms`;
         timeBadge.classList.remove("hidden");
         runBtn.disabled = false;
         runBtn.classList.remove("opacity-50");
 
-        const lesson = PLAN_DATABASE[currentLessonIndex];
-        if (!isSandboxMode && !isError && lesson.tasks && lesson.tasks.length > 0) {
-          validateTaskResult(stdout.trim());
+        if (!isSandboxMode && !isError) {
+          if (navMode === "problemset") {
+            validateProblemResult(stdout.trim());
+          } else {
+            const lesson = PLAN_DATABASE[currentLessonIndex];
+            if (lesson && lesson.tasks && lesson.tasks.length > 0) {
+              validateTaskResult(stdout.trim());
+            }
+          }
         }
 
-        // On mobile, ensure terminal output is scrolled smoothly into view
         const term = document.getElementById("terminalOutput");
         if (term) term.scrollTop = term.scrollHeight;
       }
@@ -2265,6 +4101,25 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       lucide.createIcons();
     }
 
+    function validateProblemResult(output) {
+      const problem = PROBLEM_SET_DATABASE[currentProblemIndex];
+      const expected = problem.expected.trim();
+      const statusBadge = document.getElementById("taskStatusBadge");
+
+      const cleanOutput = output.replace(/\r\n/g, "\n").trim();
+      const cleanExpected = expected.replace(/\r\n/g, "\n").trim();
+
+      if (cleanOutput === cleanExpected) {
+        statusBadge.className = "flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 rounded-full bg-theme-amberMuted text-theme-amber border border-theme-amber/30 text-[11px] font-semibold";
+        statusBadge.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5 text-theme-emerald"></i> <span>Верно! Задача решена (+${problem.xp} XP)</span>`;
+        markProblemComplete(problem.id, problem.xp);
+      } else {
+        statusBadge.className = "flex items-center gap-1.5 px-2.5 sm:px-3 py-0.5 rounded-full bg-theme-coralMuted text-theme-coral border border-theme-coral/30 text-[11px]";
+        statusBadge.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5"></i> <span>Вывод не совпал</span>`;
+      }
+      lucide.createIcons();
+    }
+
     function simulateBasicPython(code) {
       let output = "";
       const lines = code.split("\n");
@@ -2283,12 +4138,12 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       return output || "Выполнено.";
     }
 
-    // 10. TERMINAL UTILITIES
+    // 11. SECURE TERMINAL UTILITIES (PREVENTS XSS)
     function appendTerminalOutput(text, colorClass = "text-theme-text") {
       const term = document.getElementById("terminalOutput");
       const line = document.createElement("div");
-      line.className = `${colorClass} whitespace-pre-wrap leading-relaxed`;
-      line.textContent = text;
+      line.className = `${colorClass} whitespace-pre-wrap leading-relaxed select-text`;
+      line.textContent = text; // SAFE: textContent completely avoids HTML injection
       term.appendChild(line);
       term.scrollTop = term.scrollHeight;
     }
@@ -2297,16 +4152,28 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       document.getElementById("terminalOutput").innerHTML = "";
     }
 
-    // 11. ADAPTIVE RESPONSIVE LAYOUT & MOBILE NAVIGATION TABS
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // 12. RESPONSIVE LAYOUT CONTROLLER
     function updateResponsiveLayout() {
       const isMobile = window.innerWidth < 1024;
       const lessonsSidebar = document.getElementById("lessonsSidebar");
+      const problemsetSidebar = document.getElementById("problemsetSidebar");
       const theoryPanel = document.getElementById("theoryPanel");
       const editorPanel = document.getElementById("editorPanel");
       const mobileTabBar = document.getElementById("mobileTabBar");
 
       if (isSandboxMode) {
         lessonsSidebar.classList.add("hidden");
+        problemsetSidebar.classList.add("hidden");
         theoryPanel.classList.add("hidden");
         mobileTabBar.classList.add("hidden");
         editorPanel.classList.remove("hidden");
@@ -2314,21 +4181,29 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
       }
 
       if (!isMobile) {
-        // Desktop (>= 1024px): show all 3 independent columns side by side
+        // Desktop (>= 1024px): show active sidebar + middle + right
         mobileTabBar.classList.add("hidden");
-        lessonsSidebar.classList.remove("hidden");
+        if (navMode === "course") {
+          lessonsSidebar.classList.remove("hidden");
+          problemsetSidebar.classList.add("hidden");
+        } else {
+          lessonsSidebar.classList.add("hidden");
+          problemsetSidebar.classList.remove("hidden");
+        }
         theoryPanel.classList.remove("hidden");
         editorPanel.classList.remove("hidden");
       } else {
-        // Mobile & Tablet (< 1024px): show mobile navigation bar and exactly one active column
+        // Mobile & Tablet (< 1024px): show mobile navigation bar and exactly one column
         mobileTabBar.classList.remove("hidden");
-        lessonsSidebar.classList.toggle("hidden", currentMobileTab !== "lessons");
+        lessonsSidebar.classList.toggle("hidden", currentMobileTab !== "course");
+        problemsetSidebar.classList.toggle("hidden", currentMobileTab !== "problemset");
         theoryPanel.classList.toggle("hidden", currentMobileTab !== "theory");
         editorPanel.classList.toggle("hidden", currentMobileTab !== "editor");
 
-        // Update tab button active indicators
+        // Update mobile buttons
         const tabBtns = {
-          lessons: document.getElementById("tabBtnLessons"),
+          course: document.getElementById("tabBtnCourse"),
+          problemset: document.getElementById("tabBtnProblemset"),
           theory: document.getElementById("tabBtnTheory"),
           editor: document.getElementById("tabBtnEditor")
         };
@@ -2336,20 +4211,15 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         for (const [key, btn] of Object.entries(tabBtns)) {
           if (!btn) continue;
           if (key === currentMobileTab) {
-            btn.className = "flex-1 py-3 text-center text-theme-emerald border-b-2 border-theme-emerald font-semibold transition-all flex items-center justify-center gap-1.5";
+            btn.className = "flex-1 py-3 text-center text-theme-emerald border-b-2 border-theme-emerald font-semibold transition-all flex items-center justify-center gap-1";
           } else {
-            btn.className = "flex-1 py-3 text-center text-theme-muted hover:text-theme-text border-b-2 border-transparent font-medium transition-all flex items-center justify-center gap-1.5";
+            btn.className = "flex-1 py-3 text-center text-theme-muted hover:text-white border-b-2 border-transparent font-medium transition-all flex items-center justify-center gap-1";
           }
         }
       }
     }
 
-    function switchMobileTab(tab) {
-      currentMobileTab = tab;
-      updateResponsiveLayout();
-    }
-
-    // 12. CELEBRATION EFFECTS
+    // 13. CELEBRATION EFFECTS
     function triggerConfetti() {
       if (typeof confetti === "function") {
         confetti({
