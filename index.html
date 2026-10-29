@@ -1888,7 +1888,7 @@
     "title": "Сумма чётных квадратов с фильтром",
     "difficulty": "Medium",
     "desc": "Пройдите циклом по числам от 1 до 20. Если число чётное — возведите его в квадрат. Если квадрат делится на 16 — пропустите его (<code>continue</code>). Найдите сумму остальных чётных квадратов и выведите результат.",
-    "expected": "760",
+    "expected": "660",
     "starter": "# Просуммируйте квадраты четных чисел без делящихся на 16:\n",
     "hint": "total = 0\nfor x in range(1, 21):\n    if x % 2 == 0:\n        sq = x ** 2\n        if sq % 16 == 0:\n            continue\n        total += sq\nprint(total)",
     "xp": 25
@@ -1899,7 +1899,7 @@
     "title": "Подсчёт гласных и согласных в строке",
     "difficulty": "Medium",
     "desc": "Дана строка <code>text = 'Python Programming Language'</code>. Подсчитайте количество гласных латинских букв (a, e, i, o, u, y без учёта регистра). Выведите: <code>Гласных: X</code>.",
-    "expected": "Гласных: 8",
+    "expected": "Гласных: 9",
     "starter": "text = 'Python Programming Language'\n# Подсчитайте гласные буквы:\n",
     "hint": "text = 'Python Programming Language'\nvowels = set('aeiouy')\ncount = sum(1 for ch in text.lower() if ch in vowels)\nprint(f'Гласных: {count}')",
     "xp": 20
@@ -2846,7 +2846,7 @@ async def main():
     elapsed = time.perf_counter() - start
     print(f"✅ Все задачи выполнены за {elapsed:.3f}с: {results}")
 
-asyncio.run(main())
+await main()
 `,
       dataclass: `# Современное ООП: Датаклассы и валидация
 from dataclasses import dataclass, field
@@ -3406,19 +3406,44 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
         return;
       }
 
+            const categoryCounts = {};
+      itemsToRender.forEach((x) => {
+        categoryCounts[x.category] = (categoryCounts[x.category] || 0) + 1;
+      });
+
+      const CATEGORY_ICONS = {
+        "Ввод и вывод": "terminal",
+        "Числа и арифметика": "hash",
+        "Условия и логика": "git-fork",
+        "Циклы и итерации": "repeat",
+        "Комплексные основы": "layers",
+        "Списки и кортежи": "brackets",
+        "Словари и множества": "database",
+        "Функции и алгоритмы": "code-2",
+        "Алгоритмические задачи": "sparkles"
+      };
+
       let lastCategory = null;
       itemsToRender.forEach((p) => {
         // If sorting by topic and showing all categories, print a clean topic group header
         if (!randomWorkoutList && problemSortMode === "topic" && activeProblemCategory === "all") {
           if (p.category !== lastCategory) {
             lastCategory = p.category;
+            const iconName = CATEGORY_ICONS[p.category] || "folder";
+            const count = categoryCounts[p.category] || 0;
             const groupHeader = document.createElement("div");
-            groupHeader.className = "pt-2.5 pb-1 px-1 flex items-center justify-between text-[11px] font-bold text-theme-amber border-b border-border/40 mb-1 mt-1 sticky top-0 bg-canvas/95 backdrop-blur-sm z-10";
+            groupHeader.className = "sticky top-0 z-10 -mx-2.5 px-2.5 py-1.5 bg-surface/85 backdrop-blur-md border-y border-border/40 mb-2 transition-all";
             groupHeader.innerHTML = `
-              <span class="flex items-center gap-1.5 uppercase tracking-wider">
-                <span class="w-1.5 h-1.5 rounded-full bg-theme-amber"></span>
-                ${p.category}
-              </span>
+              <div class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-subtle/80 border border-theme-amber/25 shadow-sm">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="w-1.5 h-1.5 rounded-full bg-theme-amber shrink-0 shadow-[0_0_6px_rgba(229,169,98,0.5)]"></span>
+                  <i data-lucide="${iconName}" class="w-3.5 h-3.5 text-theme-amber shrink-0"></i>
+                  <span class="text-[11px] font-bold text-white uppercase tracking-wider truncate font-mono">${escapeHtml(p.category)}</span>
+                </div>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface border border-border text-theme-amber font-semibold shrink-0">
+                  ${count}
+                </span>
+              </div>
             `;
             container.appendChild(groupHeader);
           }
@@ -3865,40 +3890,50 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
     }
 
     function insertSolutionHint() {
+      const editor = document.getElementById("codeEditor");
       if (navMode === "problemset") {
         const problem = PROBLEM_SET_DATABASE[currentProblemIndex];
-        const editor = document.getElementById("codeEditor");
         editor.value = problem.hint;
         updateLineNumbers();
+        editor.dispatchEvent(new Event("input"));
         appendTerminalOutput(`💡 Готовое решение подставлено в редактор для [${problem.title}].`, "text-theme-amber");
+        if (window.innerWidth < 1024) {
+          switchMobileNav("editor");
+        }
         return;
       }
 
       const lesson = PLAN_DATABASE[currentLessonIndex];
       if (!lesson.tasks || lesson.tasks.length === 0) return;
       const task = lesson.tasks[currentTaskIndex];
-      const editor = document.getElementById("codeEditor");
       editor.value = task.hint;
       updateLineNumbers();
+      editor.dispatchEvent(new Event("input"));
       appendTerminalOutput(`💡 Готовое решение подставлено в редактор для [Задача ${currentTaskIndex + 1}].`, "text-theme-amber");
+      if (window.innerWidth < 1024) {
+        switchMobileNav("editor");
+      }
     }
 
     function resetEditorCode() {
+      const editor = document.getElementById("codeEditor");
       if (isSandboxMode) {
-        document.getElementById("codeEditor").value = "# Свободная песочница Python 3.12\nprint(\"Hello, PythonCraft!\")\n";
+        editor.value = "";
+        localStorage.setItem("pythoncraft_sandbox_code_v6", "");
       } else if (navMode === "problemset") {
         const problem = PROBLEM_SET_DATABASE[currentProblemIndex];
-        document.getElementById("codeEditor").value = problem.starter;
+        editor.value = problem.starter;
       } else {
         const lesson = PLAN_DATABASE[currentLessonIndex];
         if (lesson.tasks && lesson.tasks.length > 0) {
           const task = lesson.tasks[currentTaskIndex];
-          document.getElementById("codeEditor").value = task.starter;
+          editor.value = task.starter;
         } else {
           loadTheoryOnlyEditor();
         }
       }
       updateLineNumbers();
+      editor.dispatchEvent(new Event("input"));
     }
 
     function copyEditorCode() {
@@ -3959,10 +3994,14 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
 
       const saved = localStorage.getItem("pythoncraft_sandbox_code_v6");
       const editor = document.getElementById("codeEditor");
-      editor.value = saved || SANDBOX_PRESETS.asyncio;
+      if (saved === null || saved === SANDBOX_PRESETS.asyncio || (typeof saved === "string" && (saved.startsWith("# Асинхронный") || saved.startsWith("# Свободная")))) {
+        editor.value = "";
+      } else {
+        editor.value = saved;
+      }
       updateLineNumbers();
 
-      appendTerminalOutput("✨ Режим Песочницы развернут на весь экран. Выберите шаблон или введите код.", "text-theme-emerald");
+      appendTerminalOutput("✨ Режим Песочницы развернут на весь экран. Введите свой код или выберите готовый шаблон выше.", "text-theme-emerald");
       updateResponsiveLayout();
     }
 
@@ -4139,7 +4178,14 @@ print(f"Ускорение генератора: в {speedup:.2f}x быстре�
             }
           });
 
-          await pyodideInstance.runPythonAsync(code);
+          // Automatic compatibility for asyncio.run() in Pyodide browser environment:
+          // Pyodide runs inside the browser event loop, where asyncio.run() raises RuntimeError.
+          // Transforming top-level asyncio.run(coro) into await coro allows standard Python async code to run seamlessly.
+          let execCode = code;
+          if (execCode.includes("asyncio.run")) {
+            execCode = execCode.replace(/asyncio\.run\(([\s\S]*?)\)/g, "await $1");
+          }
+          await pyodideInstance.runPythonAsync(execCode);
         } else {
           stdout = simulateBasicPython(code);
           appendTerminalOutput(stdout, "text-theme-text");
